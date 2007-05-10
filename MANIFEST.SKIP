@@ -1,0 +1,8 @@
+_darcs
+build-stamp
+install-stamp
+debian/files
+debian/libxml-api-perl
+Makefile$
+MANIFEST.bak
+libxml-api-perl

@@ -1,0 +1,15 @@
+Source: libxml-api-perl
+Section: perl
+Priority: optional
+Build-Depends: debhelper (>= 4.0.2), libmodule-build-perl
+Build-Depends-Indep: perl (>= 5.8.0-7)
+Maintainer: mlawren <nomad@null.net>
+Standards-Version: 3.6.1
+
+Package: libxml-api-perl
+Architecture: all
+Depends: ${perl:Depends}, ${misc:Depends}, libtree-simple-perl (>= 1.17-1), libxml-parser-perl
+Description:  XML::API - Perl extension for creating XML documents
+ XML::API is a class for creating XML documents using object method
+ calls. This class is meant for generating XML programatically and not
+ for reading or parsing it.
