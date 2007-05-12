@@ -2,7 +2,7 @@
 use inc::Module::Install;
     
 name            'XML-API';
-#license         'GPL';
+license         'GPL';
 all_from        'lib/XML/API.pm';
 requires        'Tree::Simple'      => '0.17';
 requires        'XML::Parser::Expat' => 0; 

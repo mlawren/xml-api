@@ -8,8 +8,9 @@ libxml-api-perl (0.14-1) stable; urgency=low
   * Removed Changes file from git control.
   * Documentation cleanup for overloading XML::API
   * Cleaned up Makefile.PL
+  * Tag and release 0.14.
 
- -- Mark Lawrence <nomad@null.net>  Sat, 12 May 2007 11:31:40 +0200
+ -- Mark Lawrence <nomad@null.net>  Sat, 12 May 2007 12:41:29 +0200
 
 libxml-api-perl (0.13-1) stable; urgency=low
 
