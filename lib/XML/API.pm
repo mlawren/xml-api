@@ -16,7 +16,7 @@ use warnings;
 use Carp;
 use overload '""' => \&_as_string, 'fallback' => 1;
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 sub new {
     my $proto = shift;
@@ -94,7 +94,7 @@ use Carp;
 use base 'XML::API::Element';
 use overload '""' => \&_as_string, 'fallback' => 1;
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 sub new {
     my $proto = shift;
@@ -145,7 +145,7 @@ use Carp;
 use base 'XML::API::Element';
 use overload '""' => \&_as_string, 'fallback' => 1;
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 sub new {
     my $proto = shift;
@@ -195,7 +195,7 @@ use XML::Parser::Expat;
 use Tree::Simple;
 use overload '""' => \&_as_string, 'fallback' => 1;
 
-our $VERSION          = '0.14';
+our $VERSION          = '0.15';
 our $DEFAULT_ENCODING = 'UTF-8';
 our $ENCODING         = undef;
 our $Indent           = '  ';
@@ -211,7 +211,7 @@ XML::API - Perl extension for writing XML
 
 =head1 VERSION
 
-0.14
+0.15
 
 =head1 SYNOPSIS
 
