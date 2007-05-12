@@ -1,6 +1,6 @@
-Changelog for Perl extension XML::API
 
-  # Move from darcs to git. Corrupted darcs inventory so patch
+
+# Move from darcs to git. Corrupted darcs inventory so patch
     history lost. Changes:
     - Created _langs method.
     - Big simplification in _open _close etc and now almost perfect

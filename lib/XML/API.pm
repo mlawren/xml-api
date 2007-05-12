@@ -1282,4 +1282,4 @@ the Free Software Foundation; either version 2 of the License, or
 
 =cut
 
-1;
+# vim: set tabstop=4 expandtab:
