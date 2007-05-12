@@ -27,6 +27,7 @@ MANIFEST
 MANIFEST.SKIP
 META.yml			Module meta-data (added by MakeMaker)
 README
+t/langs.t
 t/pod-coverage.t
 t/pod.t
 t/XML-API-XHTML.t

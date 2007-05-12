@@ -1,8 +1,12 @@
 libxml-api-perl (0.14-1) stable; urgency=low
 
   * Minor documentation changes.
+  * Changed the behaviour of _set_lang to set xml:lang on the next
+  element to be created. Automatically sets the xml:lang attribute on the
+  root element on the first call.
+  * Test script for the language functions: t/lang.t
 
- -- Mark Lawrence <nomad@null.net>  Fri, 11 May 2007 01:25:12 +0200
+ -- Mark Lawrence <nomad@null.net>  Sat, 12 May 2007 09:36:08 +0200
 
 libxml-api-perl (0.13-1) stable; urgency=low
 

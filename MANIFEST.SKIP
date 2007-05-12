@@ -6,3 +6,4 @@ debian/libxml-api-perl
 Makefile$
 MANIFEST.bak
 libxml-api-perl
+.git

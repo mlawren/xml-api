@@ -587,7 +587,7 @@ sub AUTOLOAD {
         return undef;
     }
 
-    # reset the string
+    # reset the output string in case it has been cached
     $self->{string} = undef;
 
     if ($element eq $self->_root_element) {
@@ -624,9 +624,6 @@ sub AUTOLOAD {
                 $attrs->{$arg} = ''
             }
             $next = 1;
-            if ($arg eq 'xml:lang') {
-                $self->{langs}->{$_[$i]} = 1;
-            }
             next;
         }
         else {
@@ -675,6 +672,10 @@ sub AUTOLOAD {
     #
     # Either element() or element_open()
     #
+    if ($self->{langnext}) {
+        $attrs->{'xml:lang'} = delete $self->{langnext};
+    }
+
     my $e = XML::API::Element->new(element => $element,
                               attrs   => $attrs,
                               content => @content ?
@@ -893,27 +894,55 @@ sub _encoding {
     return $self->{encoding};
 }
 
+
+=head2 $x->_set_lang($lang)
+
+Add an 'xml:lang' attribute to the next element to be created. In
+terms of output created this means that:
+
+  $x->_set_lang('de');
+  $x->p('Was sagst du?');
+
+is equivalent to:
+
+  $x->p(-xml:lang => 'de', 'Was sagst du?');
+
+with the added difference that _set_lang keeps track of each call
+and the list of languages set can be retrieved using the _langs
+method below.
+
+The first time _set_lang is called the xml:lang attribute will be
+added to the root element instead of the next one, unless $x is
+a generic XML document. Without a XML::API::<class> object we
+don't know if we have the root element or not.
+
+=cut
+
+
+sub _set_lang {
+    my $self = shift;
+    my $lang = shift || croak 'usage: set_lang($lang)';
+
+    if (ref($self) eq __PACKAGE__ or $self->{langroot}) {
+        $self->{langnext} = $lang;
+    }
+    else {
+        $self->{langroot} = $lang;
+    }
+    $self->{langs}->{$lang} = 1;
+
+    return;
+}
+
+
 =head2 $x->_langs
 
-Returns a list of the languages that this object's content has. The
-list is automatically added to by any element that specifies 'xml:lang'
-as one of its attributes.
-
-Unfortunately if you have set an element's 'xml:lang' attribute after
-it was created (using the _attrs methods) then XML::API won't catch
-that occurance, with the exception of the root element.
+Returns the list of the languages that have been specified by _set_lang.
 
 =cut
 
 sub _langs {
     my $self = shift;
-    return unless($self->{trees});
-    my $root = $self->{trees}->[0]->getNodeValue;
-    if ($root and ref($root) and $root->isa('XML::API::Element')) {
-        if (exists($root->{attrs}->{'xml:lang'})) {
-            $self->{langs}->{$root->{attrs}->{'xml:lang'}} = 1;
-        }
-    }
     return keys %{$self->{langs}};
 }
 
@@ -1100,6 +1129,9 @@ sub _as_string {
     if (ref($self) eq __PACKAGE__ or $self->{has_root_element}) {
         $string = qq{<?xml version="1.0" encoding="$self->{encoding}" ?>\n};
         $string .= $self->_doctype . "\n" if($self->_doctype);
+        if ($self->{langroot}) {
+            $self->{trees}->[0]->getNodeValue->{attrs}->{'xml:lang'} = $self->{langroot};
+        }
     }
     foreach my $tree (@{$self->{trees}}) {
         _pre($tree);
@@ -1151,6 +1183,9 @@ sub _fast_string {
     if ($self->{has_root_element}) {
         $string = qq{<?xml version="1.0" encoding="$self->{encoding}" ?>};
         $string .= $self->_doctype if($self->_doctype);
+        if ($self->{langroot}) {
+            $self->{trees}->[0]->getNodeValue->{attrs}->{'xml:lang'} = $self->{langroot};
+        }
     }
     foreach my $tree (@{$self->{trees}}) {
         _pre_fast($tree);

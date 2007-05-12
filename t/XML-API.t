@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 20;
+use Test::More tests => 23;
 use Test::Exception;
 
 BEGIN {
@@ -38,6 +38,8 @@ can_ok($x, '_current');
 can_ok($x, '_set_id');
 can_ok($x, '_goto');
 can_ok($x, '_attrs');
+can_ok($x, '_set_lang');
+can_ok($x, '_langs');
 can_ok($x, '_cdata');
 can_ok($x, '_javascript');
 can_ok($x, '_as_string');
@@ -46,7 +48,8 @@ can_ok($x, '_print');
 
 $x->_comment('COMMENT');
 
-$x->html_open('-xml:lang' => 'en');
+$x->html_open();
+$x->_set_lang('en');
 $x->_comment('this is another comment inside the html tag');
 $x->_encoding('latin1');
 $x->_debug(1);
@@ -71,6 +74,7 @@ $x->li_close();
 $x->div(-class => 'classname', -id => 'idname', 'and the content with &');
 
 my $j = XML::API->new();
+$j->_set_lang('de');
 $j->p_open;
 $j->_add('external object');
 $j->_comment('with comment');
@@ -91,6 +95,8 @@ $k->_comment('second comment');
 $k->p_close;
 $k->_comment('COMMENT for external object (but began with empty element)');
 ok(3);
+
+ok(scalar($x->_langs) == 2, 'language check');
 print join(',',$x->_langs);
 print $x;
 print STDERR "\nDocument looks like: ",length($x->_as_string),"\n";

@@ -7,6 +7,7 @@ use XML::API::XHTML;
 
 my $h = XML::API->new();
 $h->head_open;
+$h->_set_lang('de');
 $h->_comment("A Comment inside the head");
 $h->title('A Test XML::API Script');
 $h->head_close;
@@ -14,6 +15,8 @@ $h->head_close;
 my $x = XML::API::XHTML->new();
 $x->html_open;
 $x->_add($h);
+
+$x->_set_lang('en');
 
 $x->body_open;
 $x->h1('A Test XML::API Page');
