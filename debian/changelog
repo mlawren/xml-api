@@ -6,8 +6,10 @@ libxml-api-perl (0.14-1) stable; urgency=low
   root element on the first call.
   * Test script for the language functions: t/lang.t
   * Removed Changes file from git control.
+  * Documentation cleanup for overloading XML::API
+  * Cleaned up Makefile.PL
 
- -- Mark Lawrence <nomad@null.net>  Sat, 12 May 2007 11:19:44 +0200
+ -- Mark Lawrence <nomad@null.net>  Sat, 12 May 2007 11:31:40 +0200
 
 libxml-api-perl (0.13-1) stable; urgency=low
 

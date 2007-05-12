@@ -1222,24 +1222,6 @@ sub _escapeXML {
 }
 
 
-=head1 OVERLOAD METHODS
-
-These are methods which may return interesting values if the
-XML::API::<class> module has overloaded them.
-
-=head2 _doctype
-
-=head2 _xsd
-
-=head2 _root_element
-
-=head2 _root_attrs
-
-=head2 _content_type
-
-Returns a string suitable for including in a HTTP 'Content-Type' header.
-
-
 #
 # We must specify the DESTROY function explicitly otherwise our AUTOLOAD
 # function gets called at object death.
@@ -1248,9 +1230,30 @@ DESTROY {};
 
 1;
 
+
 =head1 OVERLOADING
 
 See the source code of XML::API::XHTML for how to create a new doctype.
+
+These are methods which may return interesting values if the
+XML::API::<class> module has overloaded them.
+
+=head2 _doctype
+
+Returns the XML DOCTYPE declaration
+
+=head2 _root_element
+
+Returns the root element
+
+=head2 _root_attrs
+
+Returns a hashref containing default key/value attributes for the root element
+
+=head2 _content_type
+
+Returns a string suitable for including in a HTTP 'Content-Type' header.
+
 
 =head1 COMPATABILITY
 
@@ -1271,10 +1274,13 @@ Mark Lawrence E<lt>nomad@null.netE<gt>
 
 A small request: if you use this module I would appreciate hearing about it.
 
-=head1 COPYRIGHT AND LICENSE
+=head1 COPYRIGHT
 
 Copyright (C) 2004-2007 Mark Lawrence <nomad@null.net>
 
+=head1 LICENSE
+
+GPL v2
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
