@@ -379,7 +379,7 @@ sub new {
     #
     if ($class ne __PACKAGE__) {
         if ($self->{doctype}) {
-          confess("Must not specify doctype when instantiating $class");
+            confess("Must not specify doctype when instantiating $class");
         }
     }
     elsif ($self->{doctype}) {
@@ -387,9 +387,8 @@ sub new {
         if (! eval "require $class;1;") {
             die "Could not load module '$class'";
         }
-        delete $self->{doctype};
     }
-
+    delete $self->{doctype};
     bless ($self, $class);
 
     $self->{encoding} = $self->{encoding} || $ENCODING || $DEFAULT_ENCODING;
@@ -836,8 +835,8 @@ sub _parse {
         if (!eval {$parser->parse($_);1;}) {
             warn $@;
         }
-        delete $parsers{$parser};
         $parser->release;
+        delete $parsers{$parser};
     }
 
     # always make sure that we finish where we started
