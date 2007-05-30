@@ -447,11 +447,15 @@ then $x->head_open(-attribute => $value) means the tree is now:
 
 =head2 $x->_add($content)
 
-Add $content to the 'current' element. $content can be either scalar
-(in which case the characters '<&">' will be escaped)
-or another XML::API object. This method will carp if you
-attempt to add $x to itself or if $x does not contain any elements
-or if $content does not contain any elements.
+Add $content to the 'current' element. If there is no current element
+then this method will carp.
+
+If $content is a scalar (ie plain text or numbers) then the characters
+'<&">' will be XML-escaped.  If $content is another XML::API object the
+elements of that object will be added to content tree.
+
+This method will also carp if you attempt to add $x to itself or if $x is
+an empty XML::API object.
 
 =cut
 
@@ -478,9 +482,35 @@ sub _add {
         }
         else {
             if ($self->{current}) {
-                my $t = Tree::Simple->new(ref($item) ? $item :
-                                            _escapeXML($item));
-                $self->{current}->addChild($t);
+                #
+                # This check to see if the previous content added
+                # was a scalar, and if so then update that object
+                # instead of adding a new one.
+                #
+                # This is an optimisation mostly for _parse'd calls
+                # because XML::Expat::Parser makes a new _add call
+                # for every new line. Rendering those as individual
+                # objects adds to the time...
+                #
+                my $count = $self->{current}->getChildCount;
+                if (ref($item) or $count < 1) {
+                    my $t = Tree::Simple->new(ref($item) ? $item :
+                                               _escapeXML($item));
+                    $self->{current}->addChild($t);
+                    return;
+                }
+                my $lastchild = $self->{current}->getChild($count - 1);
+                my $lastval   = $lastchild->getNodeValue;
+
+                if (ref($lastval)) {
+                    my $t = Tree::Simple->new(ref($item) ? $item :
+                                               _escapeXML($item));
+                    $self->{current}->addChild($t);
+                    return;
+                }
+
+                # It was just a scalar, we can add to it.
+                $lastchild->setNodeValue($lastval . _escapeXML($item));
             }
             else {
                 croak('Cannot use _add with no current element');
