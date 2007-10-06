@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 20;
+use Test::More tests => 19;
 use Test::Exception;
 
 BEGIN {
@@ -47,7 +47,6 @@ can_ok($x, '_cdata');
 can_ok($x, '_javascript');
 can_ok($x, '_as_string');
 can_ok($x, '_fast_string');
-can_ok($x, '_print');
 
 $x->_comment('COMMENT');
 

@@ -1,29 +1,50 @@
-package XML::API::Element;
 # Private package (not to be used outside XML::API)
+package XML::API::Element;
 use strict;
 use warnings;
-use Carp;
-use overload '""' => \&_as_string, 'fallback' => 1;
+use Carp qw(croak);
 
 our $VERSION = '0.15';
 
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-    my %param = (
-        element   => undef,
+    my $self = {
         attrs     => {},
-        content   => undef,
+        contents  => [],
         @_
-    );
+    };
 
-    croak 'element not defined' unless(defined($param{element}));
-    croak 'attrs not defined'   unless(defined($param{attrs}));
 
-    my $self = \%param;
+    if ($self->{comment}) {
+        $self->{comment} =~ s/--/- -/g;
+    }
+
     bless ($self, $class);
     return $self;
 }
+
+
+sub set_parent {
+    my $self = shift;
+    croak 'parent must be '.__PACKAGE__
+        unless(UNIVERSAL::isa($_[0], __PACKAGE__));
+
+    $self->{parent} = shift;
+}
+
+
+sub parent {
+    my $self = shift;
+    return $self->{parent};
+}
+
+
+sub inline {
+    my $self = shift;
+    return $self->{inline};
+}
+
 
 sub attrs_as_string {
     my $self = shift;
@@ -38,139 +59,57 @@ sub attrs_as_string {
         push(@strings, qq{$key="$val"});
     }
 
-    return ' ' . join(' ', @strings) if (@strings);
-    return '';
+    return '' unless(@strings);
+    return ' ' . join(' ', @strings);
 }
 
-# the opening tag for an element with element-type children
-sub eopen {
+
+sub add {
     my $self = shift;
-    return '<'. $self->{element} . $self->attrs_as_string .'>'.
-            (defined($self->{content}) ? $self->{content} : '');
+    push(@{$self->{contents}}, @_);
 }
 
-# the opening tag for an element with no element-type children
-sub eopen_single {
-    my $self = shift;
-    return '<'. $self->{element} . $self->attrs_as_string .' />' unless(defined($self->{content}));
-    return '<'. $self->{element} . $self->attrs_as_string .'>'.
-            (defined($self->{content}) ? $self->{content} : '') .
-            '</'. $self->{element} .'>';
+
+sub as_string {
+    my $self       = shift;
+    my $indent     = shift || '';
+    my $growindent = shift || '';
+
+    if ($self->{comment}) {
+        return $indent . '<!-- '. $self->{comment} .' -->';
+    }
+
+    if ($self->{cdata}) {
+        return $indent . '<![CDATA['. $self->{cdata} . ']]>';
+    }
+
+#use Data::Dumper;
+#$Data::Dumper::Indent = 1;
+#warn Dumper($self), caller;
+    if (!@{$self->{contents}}) {
+        return $indent . '<'. $self->{element} . $self->attrs_as_string . ' />';
+    }
+
+    my $str = $indent . '<'. $self->{element} . $self->attrs_as_string .'>';
+    my $complex = 0;
+
+    foreach my $c (@{$self->{contents}}) {
+        if (UNIVERSAL::isa($c, __PACKAGE__) and !$c->inline) {
+            $complex = 1;
+            $str .= "\n" . $c->as_string($indent . $growindent, $growindent);
+        }
+        else {
+            $str .= $c if (defined($c));
+        }
+    }
+
+    if ($complex) {
+        $str .= "\n" . $indent;
+    }
+    $str .=  '</'. $self->{element} .'>';
+    return $str;
 }
 
-sub eclose {
-    my $self = shift;
-    return '</'. $self->{element} .'>';
-}
-
-sub eclose_single {
-}
-
-sub _as_string {
-    my $self = shift;
-    return $self->{element} || '*empty*';
-}
-
-# ----------------------------------------------------------------------
-# XML::API::Element::Comment -  representation of an XML comment
-#
-# This is a private package (not to be used outside XML::API)
-# ----------------------------------------------------------------------
-package XML::API::Element::Comment;
-use strict;
-use warnings;
-use Carp;
-use base 'XML::API::Element';
-use overload '""' => \&_as_string, 'fallback' => 1;
-
-our $VERSION = '0.15';
-
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my %param = (
-        content   => undef,
-        @_
-    );
-
-    croak 'content not defined' unless(defined($param{content}));
-
-    $param{content} =~ s/--/- -/g;
-    my $self = \%param;
-    bless ($self, $class);
-    return $self;
-}
-
-sub eopen {
-    my $self = shift;
-    return "<!-- $self->{content} -->";
-}
-
-sub eopen_single {
-    my $self = shift;
-    return $self->eopen;
-}
-
-sub eclose {
-}
-
-sub eclose_single {
-}
-
-sub _as_string {
-    my $self = shift;
-    return '*comment* '. $self->{content};
-}
-
-# ----------------------------------------------------------------------
-# XML::API::Element::Cdata -  representation of XML CDATA
-#
-# This is a private package (not to be used outside XML::API)
-# ----------------------------------------------------------------------
-package XML::API::Element::Cdata;
-use strict;
-use warnings;
-use Carp;
-use base 'XML::API::Element';
-use overload '""' => \&_as_string, 'fallback' => 1;
-
-our $VERSION = '0.15';
-
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my %param = (
-        content   => undef,
-        @_
-    );
-
-    croak 'content not defined' unless(defined($param{content}));
-
-    my $self = \%param;
-    bless ($self, $class);
-    return $self;
-}
-
-sub eopen {
-    my $self = shift;
-    return '<![CDATA['. $self->{content} . ']]>';
-}
-
-sub eopen_single {
-    my $self = shift;
-    return $self->eopen;
-}
-
-sub eclose {
-}
-
-sub eclose_single {
-}
-
-sub _as_string {
-    my $self = shift;
-    return '*cdata* '. $self->{content};
-}
 
 # ----------------------------------------------------------------------
 # XML::API - Perl extension for creating XML documents
@@ -178,11 +117,10 @@ sub _as_string {
 package XML::API;
 use strict;
 use warnings;
-use Carp qw(cluck carp croak confess);
-use Scalar::Util qw/blessed/;
-use XML::Parser::Expat;
-use Tree::Simple;
 use overload '""' => \&_as_string, 'fallback' => 1;
+use Carp qw(carp croak confess);
+use UNIVERSAL;
+use XML::Parser::Expat;
 
 our $VERSION          = '0.15';
 our $DEFAULT_ENCODING = 'UTF-8';
@@ -228,7 +166,7 @@ sub new {
     bless ($self, $class);
 
     $self->{encoding} = $self->{encoding} || $ENCODING || $DEFAULT_ENCODING;
-    $self->{trees}    = undef;
+    $self->{elements} = [];
     $self->{current}  = undef;
     $self->{string}   = undef;
     $self->{ids}      = {};
@@ -260,75 +198,68 @@ sub _doctype {
 
 sub _add {
     my $self = shift;
+    $self->{string} = undef;
+
     foreach my $item (@_) {
-        if (blessed($item) and $item->isa(__PACKAGE__)) {
+        if (UNIVERSAL::isa($item, __PACKAGE__)) {
             if (\$item == \$self) {
-                die 'Cannot _add object to itself';
+                croak 'Cannot _add object to itself';
             }
-            if (!$item->{trees}) {
+            if (!@{$item->{elements}}) {
                 carp "failed to _add object with no elements";
                 return;
             }
             if (!$self->{current}) {
-                push(@{$self->{trees}}, @{$item->{trees}});
+                push(@{$self->{elements}}, @{$item->{elements}});
+                $item->{elements} = $self->{elements};
             }
             else {
-                $self->{current}->addChildren(@{$item->{trees}});
+                $self->{current}->add(@{$item->{elements}});
+                if (!$item->{current}) {
+                    $item->{current} = $self->{current};
+                }
             }
             foreach my $lang (keys %{$item->{langs}}) {
                 $self->{langs}->{$lang} = 1;
             }
         }
         else {
-            if ($self->{current}) {
-                #
-                # This check to see if the previous content added
-                # was a scalar, and if so then update that object
-                # instead of adding a new one.
-                #
-                # This is an optimisation mostly for _parse'd calls
-                # because XML::Expat::Parser makes a new _add call
-                # for every new line. Rendering those as individual
-                # objects adds to the time...
-                #
-                my $count = $self->{current}->getChildCount;
-                if (ref($item) or $count < 1) {
-                    my $t = Tree::Simple->new(ref($item) ? $item :
-                                               _escapeXML($item));
-                    $self->{current}->addChild($t);
-                    return;
-                }
-                my $lastchild = $self->{current}->getChild($count - 1);
-                my $lastval   = $lastchild->getNodeValue;
-
-                if (ref($lastval)) {
-                    my $t = Tree::Simple->new(ref($item) ? $item :
-                                               _escapeXML($item));
-                    $self->{current}->addChild($t);
-                    return;
-                }
-
-                # It was just a scalar, we can add to it.
-                $lastchild->setNodeValue($lastval . _escapeXML($item));
+            if (!$self->{current}) {
+                croak 'Cannot use _add with no current element';
             }
-            else {
-                croak('Cannot use _add with no current element');
+
+            if (UNIVERSAL::isa($item, 'XML::API::Element')) {
+                $self->{current}->add($item);
+                return;
             }
+
+#            if ((my $lpos = scalar @{$self->{current}->{contents}} - 1) >0) {
+#                if (!ref($self->{current}->{contents}->[$lpos])) {
+#                    $self->{current}->{contents}->[$lpos] .= _escapeXML($item);
+#                    return;
+#                }
+#            }
+
+            $self->{current}->add(_escapeXML($item));
+            return;
         }
     }
 }
+
+
 sub _raw {
     my $self = shift;
+    $self->{string} = undef;
     foreach my $item (@_) {
         if (ref($item) and $item->isa(__PACKAGE__)) {
-            croak('Cannot add XML::API objects as raw');
+            croak 'Cannot add XML::API objects as raw';
         }
-        elsif (!$self->{current}) {
-            croak('Cannot use _raw outside of an element');
+        if ($self->{current}) {
+            $self->{current}->add($item);
         }
-
-        my $t = Tree::Simple->new($item);
-        $self->{current}->addChild($t);
+        else {
+            push(@{$self->{elements}}, $item);
+        }
     }
 }
 
@@ -399,7 +330,6 @@ sub AUTOLOAD {
             next;
         }
         else {
-#            push(@content, defined($arg) ? _escapeXML($arg) : '');
             push(@content, $arg);
         }
     }
@@ -423,10 +353,10 @@ sub AUTOLOAD {
             carp 'attempt to close non-existent element "' . $element . '"';
             return;
         }
-        my $cur = $self->{current}->getNodeValue;
-        if ($element eq $cur->{element}) {
-            if (!$self->{current}->isRoot) {
-                $self->{current} = $self->{current}->getParent();
+
+        if ($element eq $self->{current}->{element}) {
+            if ($self->{current}->parent) {
+                $self->{current} = $self->{current}->parent;
                 $self->_comment("DEBUG: '$element' close at $file:$line") if($self->{debug});
                 return;
             }
@@ -437,7 +367,7 @@ sub AUTOLOAD {
         }
         else {
             carp 'attempted to close element "' . $element . '" when current ' .
-                 'element is "' . $cur->{element} . '"';
+                 'element is "' . $self->{current}->{element} . '"';
             return;
         }
     }
@@ -452,26 +382,30 @@ sub AUTOLOAD {
         $attrs->{'dir'} = delete $self->{dirnext};
     }
 
-    my $e = XML::API::Element->new(element => $element,
-                              attrs   => $attrs);#,
-#                              content => @content ?
-#                                         join('', @content) : undef);
-    my $t = Tree::Simple->new($e);
-
+    my $e;
     if ($self->{current}) {
-        $self->{current}->addChild($t);
+        $e = XML::API::Element->new(
+            element  => $element,
+            attrs    => $attrs,
+            parent   => $self->{current},
+        );
+        $self->_add($e);
     }
     else {
-        push(@{$self->{trees}}, $t);
+        $e = XML::API::Element->new(
+            element  => $element,
+            attrs    => $attrs,
+        );
+        push(@{$self->{elements}}, $e);
     }
 
     if ($open) {
-        $self->{current} = $t;
+        $self->{current} = $e;
         $self->_add(@content);
     }
     else {
         my $old = $self->{current};
-        $self->{current} = $t;
+        $self->{current} = $e;
         $self->_add(@content);
         $self->{current} = $old;
     }
@@ -482,36 +416,20 @@ sub AUTOLOAD {
     return $e;
 }
 
+
 sub _comment {
     my $self = shift;
-    my $c = XML::API::Element::Comment->new(content => join('',@_)); # FIXME: should escape?
-    my $t = Tree::Simple->new($c);
-
-    if (!$self->{current}) {
-        push(@{$self->{trees}}, $t);
-    }
-    else {
-        $self->{current}->addChild($t);
-    }
-    $self->{string} = undef;
+    # FIXME: should escape?
+    $self->_raw(XML::API::Element->new(comment => join('',@_)));
+    return;
 }
 
 
 sub _cdata {
     my $self = shift;
-    my $e = XML::API::Element::Cdata->new(content => join('',@_));
-    my $t = Tree::Simple->new($e);
-
-    if (!$self->{current}) {
-        push(@{$self->{trees}}, $t);
-    }
-    else {
-        $self->{current}->addChild($t);
-    }
-
-    $self->{string} = undef;
+    $self->_raw(XML::API::Element->new(cdata => join('',@_)));
+    return;
 }
-
 
 
 sub _javascript {
@@ -523,6 +441,7 @@ sub _javascript {
     $self->script_close;
     return;
 }
+
 
 #
 # Start Element handler for _parse
@@ -591,7 +510,6 @@ sub _parse {
 }
 
 
-
 sub _attrs {
     my $self  = shift;
 
@@ -600,10 +518,11 @@ sub _attrs {
         if (!$attrs or ref($attrs) ne 'HASH') {
             croak 'usage: _attrs($hashref)';
         }
-        $self->{current}->getNodeValue()->{attrs} = $attrs;
+        $self->{current}->{attrs} = $attrs;
     }
-    return $self->{current}->getNodeValue->{attrs};
+    return $self->{current}->{attrs};
 }
+
 
 sub _encoding {
     my $self = shift;
@@ -668,17 +587,17 @@ sub _set_id {
     $self->{ids}->{$id} = $self->{current};
 }
 
+
 sub _goto {
     my $self = shift;
 
     if (@_) {
         my $id = shift;
         if (!defined $id) {
-#            carp "undefined argument given to _goto";
             $self->{current} = undef;
             return;
         }
-        if (ref($id) and $id->isa('Tree::Simple')) {
+        if (UNIVERSAL::isa($id, 'XML::API::Element')) {
             $self->{current} = $id;
         }
         elsif (defined($self->{ids}->{$id})) {
@@ -693,83 +612,16 @@ sub _goto {
     return $self->{current};
 }
 
-sub _child_next_sib_is_element {
-    my $i = shift;
-    # if our first child is an element....
-    if ($i->getChildCount and my $cv = $i->getChild(0)->getNodeValue) {
-        if (blessed($cv) and $cv->isa('XML::API::Element')) {
-            return 1;
-        }
-        return;
-    }
-    # if our next sibling is an element...
-    elsif (ref($i->getParent) eq 'Tree::Simple' and 
-           $i->getIndex < $i->getParent->getChildCount - 1) {
-        my $nv = $i->getSibling($i->getIndex + 1)->getNodeValue;
-        if (blessed($nv) and $nv->isa('XML::API::Element')) {
-            return 1;
-        }
-        return;
-    }
-    # No sibling so next tag will be a closing...
-    return 1;
-}
-
-sub _next_sib_is_element {
-    my $i = shift;
-    # if our next sibling is an element...
-    if (ref($i->getParent) eq 'Tree::Simple' and 
-           $i->getIndex < $i->getParent->getChildCount - 1) {
-        my $nv = $i->getSibling($i->getIndex + 1)->getNodeValue;
-        if (blessed($nv) and $nv->isa('XML::API::Element')) {
-            return 1;
-        }
-        return;
-    }
-    # No sibling so next tag will be a closing...
-    return 1;
-}
-
-sub _pre {
-    my ($item) = @_;
-
-    my $val = $item->getNodeValue;
-    if (blessed($val) and $val->isa('XML::API::Element')) {
-        if ($item->isLeaf) {
-            $string .= $Indent x ($item->getDepth + 1) . $val->eopen_single;
-        }
-        else {
-            $string .= $Indent x ($item->getDepth + 1) . $val->eopen;
-        }
-        $string .= "\n" if (_child_next_sib_is_element($item));
-    }
-    else {
-        $string .= defined($val) ? $val : '';
-    }
-}
-
-use UNIVERSAL;
-sub _post {
-    my ($item) = @_;
-    return if($item->isLeaf); # _pre function already put a newline in
-
-    my $val = $item->getNodeValue;
-    if (blessed($val) and $val->isa('XML::API::Element')) {
-            if ($item->getChildCount and UNIVERSAL::isa($item->getChild($item->getChildCount - 1)->getNodeValue, 'XML::API::Element')) {
-                $string .= $Indent x (1 + $item->getDepth);
-            }
-            $string .= $val->eclose;
-    }
-    if ($item->isRoot or _next_sib_is_element($item)) {
-        $string .= "\n";
-    }
-    return;
-}
 
 sub _as_string {
     my $self  = shift;
-    return '' unless $self->{trees};
+    return '' unless $self->{elements};
     return $self->{string} if ($self->{string});
+
+    my $grow = shift;
+    if (!defined($grow)) {
+        $grow = '  ';
+    }
 
     $string = '';
 
@@ -777,19 +629,17 @@ sub _as_string {
         $string = qq{<?xml version="1.0" encoding="$self->{encoding}" ?>\n};
         $string .= $self->_doctype . "\n" if($self->_doctype);
         if ($self->{langroot}) {
-            $self->{trees}->[0]->getNodeValue->{attrs}->{'xml:lang'} = $self->{langroot};
+            $self->{elements}->[0]->{attrs}->{'xml:lang'} = $self->{langroot};
         }
         if ($self->{dirroot}) {
-            $self->{trees}->[0]->getNodeValue->{attrs}->{'dir'} = $self->{dirroot};
+            $self->{elements}->[0]->{attrs}->{'dir'} = $self->{dirroot};
         }
     }
-    foreach my $tree (@{$self->{trees}}) {
-        _pre($tree);
-        $tree->traverse(\&_pre,\&_post);
-        _post($tree);
+    foreach my $e (@{$self->{elements}}) {
+        $string .= $e->as_string('', '  ');
     }
-    $string .= '<!-- ' . __PACKAGE__ . " v$VERSION -->\n"
-        if ($self->{has_root_element});
+#    $string .= '<!-- ' . __PACKAGE__ . " v$VERSION -->\n"
+#        if ($self->{has_root_element});
 
     $self->{string} = $string;
     return $string;
@@ -797,61 +647,16 @@ sub _as_string {
 
 
 
-sub _pre_fast {
-    my ($item) = @_;
-    my $val = $item->getNodeValue;
-    if (blessed($val) and $val->isa('XML::API::Element')) {
-        return if ($val->isa('XML::API::Element::Comment'));
-        $string .= $val->eopen;
-    }
-    else {
-        $string .= $val;
-    }
-}
-
-sub _post_fast {
-    my ($item) = @_;
-    my $val = $item->getNodeValue;
-    if (blessed($val) and $val->isa('XML::API::Element')) {
-        return if ($val->isa('XML::API::Element::Comment'));
-        $string .= $val->eclose;
-    }
-}
-
 sub _fast_string {
     my $self = shift;
-    return '' unless $self->{trees};
-
-    $string = '';
-
-    if ($self->{has_root_element}) {
-        $string = qq{<?xml version="1.0" encoding="$self->{encoding}" ?>};
-        $string .= $self->_doctype if($self->_doctype);
-        if ($self->{langroot}) {
-            $self->{trees}->[0]->getNodeValue->{attrs}->{'xml:lang'} = $self->{langroot};
-        }
-        if ($self->{dirroot}) {
-            $self->{trees}->[0]->getNodeValue->{attrs}->{'dir'} = $self->{dirroot};
-        }
-    }
-    foreach my $tree (@{$self->{trees}}) {
-        _pre_fast($tree);
-        $tree->traverse(\&_pre_fast,\&_post_fast);
-        _post_fast($tree);
-    }
-    return $string;
-}
-
-
-sub _print {
-    my $self = shift;
-    print $self->_as_string(), "\n";
+    return '' unless $self->{elements};
+    return $self->_as_string('');
 }
 
 
 sub _escapeXML {
     my $data = $_[0];
-    return unless(defined($data));
+    return '' unless(defined($data));
     if ($data =~ /[\&\<\>\"]/) {
         $data =~ s/\&(?!\w+\;)/\&amp\;/g;
         $data =~ s/\</\&lt\;/g;
@@ -898,7 +703,7 @@ XML::API - Perl extension for writing XML
   $x->body_close();
   $x->html_close();
 
-  $x->_print;
+  print $x;
 
 Will produce this nice output:
 
@@ -1000,7 +805,7 @@ together just before printing:
   $x->html_open;
   $x->_add($h);
   $x->html_close;
-  $x->_print;
+  print $x;
 
 Note that it is also possible to call the XML::API::<doctype> class directly.
 
@@ -1242,10 +1047,6 @@ called mulitple times in a row with little cost.
 Returns the rendered version of the XML document without newlines or
 indentation.
 
-=head2 $x->_print( )
-
-A shortcut for "print $x->_as_string()". The "" operator is also
-overloaded so it is in fact possible to simply 'print $x' as well.
 
 =head1 OVERLOADING
 
@@ -1279,6 +1080,8 @@ object to another.
 
 Version 0.13 made the doctype parameter to new() optional, so that
 generic (ie no DOCTYPE declaration) XML documents can be created.
+
+Version 0.15 removed the pointless _print method.
 
 =head1 SEE ALSO
 

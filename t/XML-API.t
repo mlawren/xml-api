@@ -1,50 +1,80 @@
-#!/usr/bin/perl
-
 use strict;
 use warnings;
-use Test::More tests => 23;
+use Test::More tests => 11;
 use Test::Exception;
 
 BEGIN {
     use_ok('XML::API');
 }
 
-# check that we have a constructor
-can_ok("XML::API", 'new');
+# test the interface
+
+can_ok('XML::API', qw/
+    _encoding
+    _debug
+    _add
+    _parse
+    _current
+    _set_id
+    _goto
+    _attrs
+    _set_lang
+    _langs
+    _cdata
+    _javascript
+    _as_string
+    _fast_string
+/);
+
 
 # giving invalid doctype with new
 throws_ok {
     XML::API->new(doctype => 'notexist');
 } qr/^Could not load module 'XML::API::NOTEXIST'/;
 
-# giving doctype with new
-#throws_ok {
-#    XML::API->new(doctype => 'xhtml', encoding => 'UTF-8');
-#} qr/^Must not specify doctype/;
-
 
 # make a root for our tree
-my $x = XML::API->new(doctype => 'xhtml', encoding => 'UTF-8');
+my $x = XML::API->new;
 isa_ok($x, 'XML::API');
-isa_ok($x, 'XML::API::XHTML');
 
-# test the interface
+$x->e_open();
+is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+<e />', 'e content');
 
-can_ok($x, '_encoding');
-can_ok($x, '_debug');
-can_ok($x, '_add');
-can_ok($x, '_parse');
-can_ok($x, '_current');
-can_ok($x, '_set_id');
-can_ok($x, '_goto');
-can_ok($x, '_attrs');
-can_ok($x, '_set_lang');
-can_ok($x, '_langs');
-can_ok($x, '_cdata');
-can_ok($x, '_javascript');
-can_ok($x, '_as_string');
-can_ok($x, '_fast_string');
-can_ok($x, '_print');
+$x->c('content');
+is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+<e>
+  <c>content</c>
+</e>', 'e c content');
+
+my $n = XML::API->new;
+$n->n_open;
+$n->n2_open('content');
+$n->n3;
+
+is($n, '<?xml version="1.0" encoding="UTF-8" ?>
+<n>
+  <n2>content
+    <n3 />
+  </n2>
+</n>', 'n content');
+
+$x->_add($n);
+
+is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+<e>
+  <c>content</c>
+  <n>
+    <n2>content
+      <n3 />
+    </n2>
+  </n>
+</e>', 'e c n content');
+
+
+use Data::Dumper;
+$Data::Dumper::Indent = 1;
+#die Dumper($x);
 
 $x->_parse('<div><p>text</p></div>');
 $x->_comment('COMMENT');
