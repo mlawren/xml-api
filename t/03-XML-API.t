@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 11;
+use Test::More tests => 10;
 use Test::Exception;
 
 BEGIN {
@@ -48,12 +48,13 @@ is($x, '<?xml version="1.0" encoding="UTF-8" ?>
 </e>', 'e c content');
 
 my $n = XML::API->new;
-$n->n_open;
-$n->n2_open('content');
+$n->n_open(-attr => 1);
+$n->n2_open;
+$n->_add('content');
 $n->n3;
 
 is($n, '<?xml version="1.0" encoding="UTF-8" ?>
-<n>
+<n attr="1">
   <n2>content
     <n3 />
   </n2>
@@ -64,14 +65,45 @@ $x->_add($n);
 is($x, '<?xml version="1.0" encoding="UTF-8" ?>
 <e>
   <c>content</c>
-  <n>
+  <n attr="1">
     <n2>content
       <n3 />
     </n2>
   </n>
 </e>', 'e c n content');
 
+$x->p_open;
+$x->_add('<raw />');
+$x->_raw('<raw />');
 
+is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+<e>
+  <c>content</c>
+  <n attr="1">
+    <n2>content
+      <n3 />
+    </n2>
+  </n>
+  <p>&lt;raw /&gt;<raw /></p>
+</e>', 'e c n p escaped and raw content');
+
+$n->_cdata('my < CDATA');
+#warn $n;
+#warn $x;
+
+is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+<e>
+  <c>content</c>
+  <n attr="1">
+    <n2>content
+      <n3 />
+      <![CDATA[my < CDATA]]>
+    </n2>
+  </n>
+  <p>&lt;raw /&gt;<raw /></p>
+</e>', 'e c n p escaped and raw content');
+
+exit;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 #die Dumper($x);

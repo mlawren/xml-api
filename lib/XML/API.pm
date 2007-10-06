@@ -25,14 +25,6 @@ sub new {
 }
 
 
-sub set_parent {
-    my $self = shift;
-    croak 'parent must be '.__PACKAGE__
-        unless(UNIVERSAL::isa($_[0], __PACKAGE__));
-
-    $self->{parent} = shift;
-}
-
 
 sub parent {
     my $self = shift;
@@ -83,9 +75,6 @@ sub as_string {
         return $indent . '<![CDATA['. $self->{cdata} . ']]>';
     }
 
-#use Data::Dumper;
-#$Data::Dumper::Indent = 1;
-#warn Dumper($self), caller;
     if (!@{$self->{contents}}) {
         return $indent . '<'. $self->{element} . $self->attrs_as_string . ' />';
     }
@@ -215,9 +204,7 @@ sub _add {
             }
             else {
                 $self->{current}->add(@{$item->{elements}});
-                if (!$item->{current}) {
-                    $item->{current} = $self->{current};
-                }
+                $item->{elements} = $self->{current}->{contents};
             }
             foreach my $lang (keys %{$item->{langs}}) {
                 $self->{langs}->{$lang} = 1;
@@ -232,13 +219,6 @@ sub _add {
                 $self->{current}->add($item);
                 return;
             }
-
-#            if ((my $lpos = scalar @{$self->{current}->{contents}} - 1) >0) {
-#                if (!ref($self->{current}->{contents}->[$lpos])) {
-#                    $self->{current}->{contents}->[$lpos] .= _escapeXML($item);
-#                    return;
-#                }
-#            }
 
             $self->{current}->add(_escapeXML($item));
             return;
@@ -641,7 +621,7 @@ sub _as_string {
 #    $string .= '<!-- ' . __PACKAGE__ . " v$VERSION -->\n"
 #        if ($self->{has_root_element});
 
-    $self->{string} = $string;
+#    $self->{string} = $string;
     return $string;
 }
 
