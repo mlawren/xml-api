@@ -46,6 +46,7 @@ can_ok($x, '_as_string');
 can_ok($x, '_fast_string');
 can_ok($x, '_print');
 
+$x->_parse('<div><p>text</p></div>');
 $x->_comment('COMMENT');
 
 $x->html_open();
@@ -74,13 +75,18 @@ $x->li_close();
 $x->div(-class => 'classname', -id => 'idname', 'and the content with &');
 
 my $j = XML::API->new();
-$j->_set_lang('de');
+$j->_set_lang('de', 'ltr');
 $j->p_open;
 $j->_add('external object');
+$j->_add(' Added a second scalar - should produce one object');
+#use Data::Dumper;
+#$Data::Dumper::Indent = 2;
+#die Dumper($j);
 $j->_comment('with comment');
 $j->_parse('<p>A *parsed* paragraph <a href="p.html">inlinelink</a> and end</p>');
 print STDERR "\n", $j->_as_string;
 
+$x->div($j);
 $x->_add($j);
 ok(2);
 
