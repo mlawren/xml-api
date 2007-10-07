@@ -44,5 +44,5 @@ $x->pre_close;
 
 
 print "Content-Type: application/xhtml+xml\n\n";
-$x->_print;
+print $x ."\n";
 
