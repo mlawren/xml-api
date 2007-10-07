@@ -99,6 +99,55 @@ sub as_string {
     return $str;
 }
 
+# Private package (not to be used outside XML::API)
+package XML::API::SAXHandler;
+use strict;
+use warnings;
+use base qw(XML::SAX::Base);
+
+sub new {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+    my $self = {
+        xmlapi => undef,
+        @_,
+    };
+    bless($self, $class);
+    return $self;
+}
+
+
+sub start_element {
+    my $self = shift;
+    my $hash = shift;
+    my $e = $hash->{Name} .'_open';
+
+    my $attrs = {};
+    foreach my $val (values %{$hash->{Attributes}}) {
+        $attrs->{$val->{Name}} = $val->{Value};
+    }
+
+    $self->{xmlapi}->$e($attrs);
+    return;
+}
+
+
+sub characters {
+    my $self = shift;
+    my $hash = shift;
+    $self->{xmlapi}->_add($hash->{Data});
+    return;
+}
+
+
+sub end_element {
+    my $self = shift;
+    my $hash = shift;
+    my $e = $hash->{Name} .'_close';
+    $self->{xmlapi}->$e;
+    return;
+}
+
 
 # ----------------------------------------------------------------------
 # XML::API - Perl extension for creating XML documents
@@ -109,7 +158,7 @@ use warnings;
 use overload '""' => \&_as_string, 'fallback' => 1;
 use Carp qw(carp croak confess);
 use UNIVERSAL;
-use XML::Parser::Expat;
+use XML::SAX;
 
 our $VERSION          = '0.15';
 our $DEFAULT_ENCODING = 'UTF-8';
@@ -118,7 +167,6 @@ our $Indent           = '  ';
 our $AUTOLOAD;
 
 my $string;
-my %parsers;
 
 # Not implemented yet:
 #  strict   => 0|1                # Optional, defaults to 0
@@ -423,66 +471,17 @@ sub _javascript {
 }
 
 
-#
-# Start Element handler for _parse
-#
-sub _sh {
-    my ($p, $el, %atts) = @_;
-    my $self = $parsers{$p};
-    if (!$self) {
-        warn 'Parser not found!!';
-        return;
-    }
-    my $f = $el . '_open';
-    $self->$f(\%atts);
-}
-
-#
-# Content handler for _parse
-#
-sub _ch {
-    my ($p, $str) = @_;
-    my $self = $parsers{$p};
-    if (!$self) {
-        warn 'Parser not found!!';
-        return;
-    }
-
-    $self->_add($str);
-}
-
-#
-# End Element handler for _parse
-#
-sub _eh {
-    my ($p, $el) = @_;
-    my $self = $parsers{$p};
-    if (!$self) {
-        warn 'Parser not found!!';
-        return;
-    }
-    my $f = $el . '_close';
-    $self->$f();
-}
-
 sub _parse {
     my $self = shift;
     my $current = $self->{current};
 
     foreach (@_) {
         next unless(defined($_));
-        my $parser = new XML::Parser::Expat(ProtocolEncoding =>
-                                               $self->{encoding});
-        $parsers{$parser} = $self;
+        my $parser = XML::SAX::ParserFactory->parser(
+            Handler => XML::API::SAXHandler->new(xmlapi => $self),
+        );
 
-        $parser->setHandlers('Start' => \&_sh,
-                             'Char'  => \&_ch,
-                             'End'   => \&_eh);
-        if (!eval {$parser->parse($_);1;}) {
-            warn $@;
-        }
-        $parser->release;
-        delete $parsers{$parser};
+        $parser->parse_string($_);
     }
 
     # always make sure that we finish where we started
@@ -600,7 +599,7 @@ sub _as_string {
 
     my $grow = shift;
     if (!defined($grow)) {
-        $grow = '  ';
+        $grow = $Indent;
     }
 
     $string = '';
@@ -917,10 +916,7 @@ A shortcut for adding $script inside a pair of
 
 Adds content to the current element, but will parse it for xml elements
 and add them as method calls. Regardless of $content (missing end tags etc)
-the current element will remain the same.
-
-Make sure that your encoding is correct before making this call as
-it will be passed as such to XML::Parser::Expat.
+the current element will remain the same. Relies on XML::SAX to do the parsing.
 
 
 =head2 $x->_attrs( )
