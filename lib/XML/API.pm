@@ -120,6 +120,12 @@ sub new {
 sub start_element {
     my $self = shift;
     my $hash = shift;
+    if($hash->{Name} eq '_xml_api_ignore') {
+        $self->{xml_api_ignore} = 1;
+        return;
+    }
+    $self->{xml_api_ignore} = 0;
+
     my $e = $hash->{Name} .'_open';
 
     my $attrs = {};
@@ -135,6 +141,7 @@ sub start_element {
 sub characters {
     my $self = shift;
     my $hash = shift;
+    $self->{xml_api_ignore} && return;
     $self->{xmlapi}->_add($hash->{Data});
     return;
 }
@@ -143,6 +150,10 @@ sub characters {
 sub end_element {
     my $self = shift;
     my $hash = shift;
+    if($hash->{Name} eq '_xml_api_ignore') {
+        return;
+    }
+
     my $e = $hash->{Name} .'_close';
     $self->{xmlapi}->$e;
     return;
@@ -542,7 +553,9 @@ sub _parse {
             Handler => XML::API::SAXHandler->new(xmlapi => $self),
         );
 
-        $parser->parse_string($_);
+        # remove leading and trailing space, otherwise SAX barfs at us.
+        (my $t = $_) =~ s/(^\s+)|(\s+$)//g;
+        $parser->parse_string('<_xml_api_ignore>'.$t.'</_xml_api_ignore>');
     }
 
     # always make sure that we finish where we started

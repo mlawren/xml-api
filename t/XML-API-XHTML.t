@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 19;
+use Test::More tests => 17;
 use Test::Exception;
 
 BEGIN {
@@ -62,39 +62,3 @@ $x->_javascript(<<"EOT");
     }
 EOT
 $x->head_close;
-
-$x->body_open;
-$x->_set_id('body');
-$x->div('junk with ordered keys?', {key2 => 'val2', key1 => 'val1'});
-$x->_goto('body');
-$x->li_open();
-$x->a({href => '#'}, 'link');
-$x->_add('|');
-$x->li_close();
-$x->div(-class => 'classname', -id => 'idname', 'and the content');
-
-my $j = XML::API->new(doctype => 'xhtml');
-$j->p_open;
-$j->_add('external object');
-$j->_comment('with comment');
-$j->_parse('<p>some paragraph <a href="p.html">inlinelink</a> and end</p>');
-$x->_add($j);
-ok(2);
-
-# Check what happens for empty elements / objects
-my $k = XML::API->new(doctype => 'xhtml');
-$k->p_open('external object (but began with empty element)');
-$x->_add($k);
-$k->_comment(' comment');
-$k->em('with emphasis');
-$k->_comment('second comment');
-$k->p_close;
-$k->_comment('COMMENT for external object (but began with empty element)');
-ok(3);
-print $x;
-#print STDERR "\nDocument looks like: ",length($x->_as_string),"\n";
-#print STDERR $x->_as_string;
-#print STDERR "\nFAST looks like: ",length($x->_fast_string),"\n";
-#print STDERR $x->_fast_string;
-
-
