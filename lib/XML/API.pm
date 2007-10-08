@@ -537,7 +537,7 @@ sub _parse {
     my $current = $self->{current};
 
     foreach (@_) {
-        next unless(defined($_));
+        next unless(defined($_) and $_ ne '');
         my $parser = XML::SAX::ParserFactory->parser(
             Handler => XML::API::SAXHandler->new(xmlapi => $self),
         );
