@@ -14,11 +14,6 @@ INSTALLATION
      make test
      make install
 
-DEPENDENCIES
-
-     XML::Parser::Expat      (from XML::Parser on CPAN)
-     Tree::Simple            (CPAN)
-
 COPYRIGHT AND LICENCE
 
   Copyright (C) 2004-2007 Mark Lawrence <nomad@null.net>

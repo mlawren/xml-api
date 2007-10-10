@@ -5,7 +5,7 @@ use warnings;
 use Carp qw(croak);
 use Scalar::Util qw(weaken);
 
-our $VERSION = '0.16';
+our $VERSION = '0.17';
 
 sub new {
     my $proto = shift;
@@ -174,7 +174,7 @@ use Carp qw(carp croak confess);
 use UNIVERSAL;
 use XML::SAX;
 
-our $VERSION          = '0.16';
+our $VERSION          = '0.17';
 our $DEFAULT_ENCODING = 'UTF-8';
 our $ENCODING         = undef;
 our $Indent           = '  ';
@@ -739,7 +739,7 @@ XML::API - Perl extension for writing XML
 
 =head1 VERSION
 
-0.16
+0.17
 
 =head1 SYNOPSIS
 
