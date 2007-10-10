@@ -3,6 +3,7 @@ package XML::API::Element;
 use strict;
 use warnings;
 use Carp qw(croak);
+use Scalar::Util qw(weaken);
 
 our $VERSION = '0.16';
 
@@ -19,6 +20,8 @@ sub new {
     if ($self->{comment}) {
         $self->{comment} =~ s/--/- -/g;
     }
+
+    weaken($self->{parent}) if (exists $self->{parent});
 
     bless ($self, $class);
     return $self;

@@ -7,6 +7,7 @@ all_from        'lib/XML/API.pm';
 requires        'XML::SAX'            => 0; 
 build_requires  'Test::More'          => '0.42';
 build_requires  'Test::Exception'     => 0;
+build_requires  'Test::Memory::Cycle' => 0;
 build_requires  'Test::Pod'           => 0;
 build_requires  'Test::Pod::Coverage' => 0;
     

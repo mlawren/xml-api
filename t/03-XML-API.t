@@ -1,7 +1,8 @@
 use strict;
 use warnings;
-use Test::More tests => 12;
+use Test::More tests => 13;
 use Test::Exception;
+use Test::Memory::Cycle;
 
 BEGIN {
     use_ok('XML::API');
@@ -142,3 +143,6 @@ is($a, '<?xml version="1.0" encoding="UTF-8" ?>
   <label>Body</label>
   <textarea cols="50" name="body" rows="10">the body</textarea>
 </p>', 'Abstract syntax tree input');
+
+
+memory_cycle_ok($x, 'memory cycle');
