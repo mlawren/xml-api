@@ -10,6 +10,9 @@ build_requires  'Test::Exception'     => 0;
 build_requires  'Test::Memory::Cycle' => 0;
 build_requires  'Test::Pod'           => 0;
 build_requires  'Test::Pod::Coverage' => 0;
+
+no_index package => 'XML::API::Element';
+no_index package => 'XML::API::SAXHandler';
     
 auto_install;
 

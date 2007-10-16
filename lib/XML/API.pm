@@ -5,7 +5,7 @@ use warnings;
 use Carp qw(croak);
 use Scalar::Util qw(weaken);
 
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 
 sub new {
     my $proto = shift;
@@ -18,7 +18,7 @@ sub new {
 
 
     if ($self->{comment}) {
-        $self->{comment} =~ s/--/- -/g;
+        $self->{comment} =~ s/--/- -/go;
     }
 
     weaken($self->{parent}) if (exists $self->{parent});
@@ -51,7 +51,7 @@ sub attrs_as_string {
             warn "Attribute '$key' (element '$self->{element}') is undefined";
             $val = '*undef*';
         }
-        push(@strings, qq{$key="$val"});
+        push(@strings, $key .'="'. $val .'"');
     }
 
     return '' unless(@strings);
@@ -101,6 +101,20 @@ sub as_string {
     $str .=  '</'. $self->{element} .'>';
     return $str;
 }
+
+
+sub fast_string {
+    my $self       = shift;
+
+    $self->{comment} && return '';
+    $self->{cdata}   && return '<![CDATA['. $self->{cdata} . ']]>';
+
+    return  '<'. $self->{element} . $self->attrs_as_string .'>'
+           . join('', map {UNIVERSAL::isa($_, __PACKAGE__) ?
+                           $_->fast_string : $_} @{$self->{contents}})
+           .  '</'. $self->{element} .'>';
+}
+
 
 # Private package (not to be used outside XML::API)
 package XML::API::SAXHandler;
@@ -174,7 +188,7 @@ use Carp qw(carp croak confess);
 use UNIVERSAL;
 use XML::SAX;
 
-our $VERSION          = '0.17';
+our $VERSION          = '0.18';
 our $DEFAULT_ENCODING = 'UTF-8';
 our $ENCODING         = undef;
 our $Indent           = '  ';
@@ -257,7 +271,7 @@ sub _add {
                 croak 'Cannot _add object to itself';
             }
             if (!@{$item->{elements}}) {
-                carp "failed to _add object with no elements";
+                carp 'failed to _add object with no elements';
                 return;
             }
             if (!$self->{current}) {
@@ -315,20 +329,20 @@ sub AUTOLOAD {
 
     my ($open, $close) = (0,0);
 
-    if ($element =~ s/.*::(.*)_open$/$1/) {
+    if ($element =~ s/.*::(.*)_open$/$1/o) {
           $open = 1;  
     }
-    elsif ($element =~ s/.*::(.*)_close$/$1/) {
+    elsif ($element =~ s/.*::(.*)_close$/$1/o) {
           $close = 1;  
     }
     else  {
-        $element =~ s/.*:://;
+        $element =~ s/.*:://o;
     }
 
     croak 'element not defined' unless($element);
 
-    if ($element =~ /^_/) {
-        croak "Undefined subroutine &" . ref($self) . "::$element called";
+    if ($element =~ /^_/o) {
+        croak 'Undefined subroutine &' . ref($self) . "::$element called";
         return undef;
     }
 
@@ -354,16 +368,16 @@ sub AUTOLOAD {
         my $arg  = $_[$i];
         if (ref($arg) eq 'HASH') {
             while (my ($key,$val) = each %$arg) {
-                $attrs->{$key} = $val;
+                $attrs->{$key} = _escapeXML($val);
                 if (!defined($val)) {
                     carp "attribute '$key' undefined (element '$element')";
                     $attrs->{$key} = ''
                 }
             }
         }
-        elsif (defined($arg) and $arg =~ m/^-.+/) {
-            $arg =~ s/^-//;
-            $attrs->{$arg} = $_[++$i];
+        elsif (defined($arg) and $arg =~ m/^-.+/o) {
+            $arg =~ s/^-//o;
+            $attrs->{$arg} = _escapeXML($_[++$i]);
             if (!defined($attrs->{$arg})) {
                 carp "attribute '$arg' undefined (element '$element') ";
                 $attrs->{$arg} = ''
@@ -481,7 +495,7 @@ sub _ast {
             foreach my $i (1 .. int(scalar(@val) / 2)) {
                 my ($arg,$arg2) = splice(@val,0,2);
 
-                if ($arg =~ s/^-(.+)/$1/) {
+                if ($arg =~ s/^-(.+)/$1/o) {
                     $attr->{$arg} = $arg2;
                 }
                 elsif (ref($arg2) and ref($arg2) eq 'ARRAY') {
@@ -538,9 +552,9 @@ sub _cdata {
 sub _javascript {
     my $self = shift;
     $self->script_open(-type => 'text/javascript');
-    $self->_raw("// -------- JavaScript Begin -------- <![CDATA[\n");
+    $self->_raw('// -------- JavaScript Begin -------- <![CDATA['."\n");
     $self->_raw(@_);
-    $self->_raw("// --------- JavaScript End --------- ]]>");
+    $self->_raw('// --------- JavaScript End --------- ]]>');
     $self->script_close;
     return;
 }
@@ -557,7 +571,7 @@ sub _parse {
         );
 
         # remove leading and trailing space, otherwise SAX barfs at us.
-        (my $t = $_) =~ s/(^\s+)|(\s+$)//g;
+        (my $t = $_) =~ s/(^\s+)|(\s+$)//go;
         $parser->parse_string('<_xml_api_ignore>'.$t.'</_xml_api_ignore>');
     }
 
@@ -661,7 +675,7 @@ sub _goto {
         }
         else {
             carp "Nonexistent ID given to _goto: '$id'. ",
-                 "(Known IDs: ", join(',',keys(%{$self->{ids}})),')';
+                 '(Known IDs: ', join(',',keys(%{$self->{ids}})),')';
             $self->{current} = undef;
         }
     }
@@ -694,9 +708,6 @@ sub _as_string {
     foreach my $e (@{$self->{elements}}) {
         $string .= $e->as_string('', '  ');
     }
-#    $string .= '<!-- ' . __PACKAGE__ . " v$VERSION -->\n"
-#        if ($self->{has_root_element});
-
 #    $self->{string} = $string;
     return $string;
 }
@@ -704,20 +715,38 @@ sub _as_string {
 
 
 sub _fast_string {
-    my $self = shift;
+    my $self  = shift;
     return '' unless $self->{elements};
-    return $self->_as_string('');
+    return $self->{string} if ($self->{string});
+
+    $string = '';
+
+    if (ref($self) eq __PACKAGE__ or $self->{has_root_element}) {
+        $string = '<?xml version="1.0" encoding="'.$self->{encoding}.'" ?>';
+        $string .= $self->_doctype . "\n" if($self->_doctype);
+        if ($self->{langroot}) {
+            $self->{elements}->[0]->{attrs}->{'xml:lang'} = $self->{langroot};
+        }
+        if ($self->{dirroot}) {
+            $self->{elements}->[0]->{attrs}->{'dir'} = $self->{dirroot};
+        }
+    }
+    foreach my $e (@{$self->{elements}}) {
+        $string .= $e->fast_string();
+    }
+#    $self->{string} = $string;
+    return $string;
 }
 
 
 sub _escapeXML {
     my $data = $_[0];
     return '' unless(defined($data));
-    if ($data =~ /[\&\<\>\"]/) {
-        $data =~ s/\&(?!\w+\;)/\&amp\;/g;
-        $data =~ s/\</\&lt\;/g;
-        $data =~ s/\>/\&gt\;/g;
-        $data =~ s/\"/\&quot\;/g;
+    if ($data =~ /[\&\<\>\"]/o) {
+        $data =~ s/\&(?!\w+\;)/\&amp\;/go;
+        $data =~ s/\</\&lt\;/go;
+        $data =~ s/\>/\&gt\;/go;
+        $data =~ s/\"/\&quot\;/go;
     }
     return $data;
 }
@@ -739,7 +768,7 @@ XML::API - Perl extension for writing XML
 
 =head1 VERSION
 
-0.17
+0.18
 
 =head1 SYNOPSIS
 
