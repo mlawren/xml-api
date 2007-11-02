@@ -375,7 +375,7 @@ sub AUTOLOAD {
                 }
             }
         }
-        elsif (defined($arg) and $arg =~ m/^-.+/o) {
+        elsif (defined($arg) and $arg =~ m/^-[^0-9\.]+/o) {
             $arg =~ s/^-//o;
             $attrs->{$arg} = _escapeXML($_[++$i]);
             if (!defined($attrs->{$arg})) {
@@ -723,7 +723,7 @@ sub _fast_string {
 
     if (ref($self) eq __PACKAGE__ or $self->{has_root_element}) {
         $string = '<?xml version="1.0" encoding="'.$self->{encoding}.'" ?>';
-        $string .= $self->_doctype . "\n" if($self->_doctype);
+        $string .= $self->_doctype if($self->_doctype);
         if ($self->{langroot}) {
             $self->{elements}->[0]->{attrs}->{'xml:lang'} = $self->{langroot};
         }
