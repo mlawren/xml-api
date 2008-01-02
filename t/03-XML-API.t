@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 14;
+use Test::More tests => 15;
 use Test::Exception;
 use Test::Memory::Cycle;
 
@@ -148,3 +148,20 @@ is($a, '<?xml version="1.0" encoding="UTF-8" ?>
 
 
 memory_cycle_ok($x, 'memory cycle');
+
+my $ns = XML::API->new;
+$ns->_ns('soapenv');
+$ns->Envelope_open();
+$ns->ns1__Body_open('my body');
+$ns->Body_close();
+$ns->_ns(undef);
+$ns->password('-xsi:type' => 'xsd:string');
+$ns->Envelope_close();
+
+
+is($ns,'<?xml version="1.0" encoding="UTF-8" ?>
+<soapenv:Envelope>
+  <ns1:Body>my body</ns1:Body>
+  <password xsi:type="xsd:string" />
+</soapenv:Envelope>', 'NameSpace support');
+

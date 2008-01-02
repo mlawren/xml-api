@@ -79,10 +79,12 @@ sub as_string {
     }
 
     if (!@{$self->{contents}}) {
-        return $indent . '<'. $self->{element} . $self->attrs_as_string . ' />';
+        return $indent . '<'. ($self->{ns} ? $self->{ns}.':' : '')
+               .  $self->{element} . $self->attrs_as_string . ' />';
     }
 
-    my $str = $indent . '<'. $self->{element} . $self->attrs_as_string .'>';
+    my $str = $indent . '<'. ($self->{ns} ? $self->{ns}.':' : '')
+              . $self->{element} . $self->attrs_as_string .'>';
     my $complex = 0;
 
     foreach my $c (@{$self->{contents}}) {
@@ -98,7 +100,7 @@ sub as_string {
     if ($complex) {
         $str .= "\n" . $indent;
     }
-    $str .=  '</'. $self->{element} .'>';
+    $str .=  '</'. ($self->{ns} ? $self->{ns}.':' : '') . $self->{element} .'>';
     return $str;
 }
 
@@ -109,10 +111,12 @@ sub fast_string {
     $self->{comment} && return '';
     $self->{cdata}   && return '<![CDATA['. $self->{cdata} . ']]>';
 
-    return  '<'. $self->{element} . $self->attrs_as_string .'>'
+    return  '<'. ($self->{ns} ? $self->{ns}.':' : '') 
+           . $self->{element} . $self->attrs_as_string .'>'
            . join('', map {UNIVERSAL::isa($_, __PACKAGE__) ?
                            $_->fast_string : $_} @{$self->{contents}})
-           .  '</'. $self->{element} .'>';
+           . '</'. ($self->{ns} ? $self->{ns}.':' : '') . $self->{element}
+           . '>';
 }
 
 
@@ -346,6 +350,11 @@ sub AUTOLOAD {
         return undef;
     }
 
+    my $namespace = $self->{namespace};
+    if ($element =~ s/(.+)__(.+)/$2/o) {
+        $namespace = $1;
+    }
+
     # reset the output string in case it has been cached
     $self->{string} = undef;
 
@@ -443,6 +452,7 @@ sub AUTOLOAD {
         $e = XML::API::Element->new(
             element  => $element,
             attrs    => $attrs,
+            ns       => $namespace,
             parent   => $self->{current},
         );
         $self->_add($e);
@@ -451,6 +461,7 @@ sub AUTOLOAD {
         $e = XML::API::Element->new(
             element  => $element,
             attrs    => $attrs,
+            ns       => $namespace,
         );
         push(@{$self->{elements}}, $e);
     }
@@ -629,6 +640,15 @@ sub _langs {
 }
 
 
+sub _ns {
+    my $self = shift;
+    if (@_) {
+        $self->{namespace} = shift;
+    }
+    return $self->{namespace};
+}
+
+
 sub _debug {
     my $self = shift;
     if (@_) {
@@ -783,7 +803,7 @@ XML::API - Perl extension for writing XML
   $x->body_open();
   $x->div_open(-id => 'content');
   $x->p(-class => 'test', 'Some <<odd>> input');
-  $x->p(-class => 'test', '& some other &stuff;');
+  $x->ns__p(-class => 'test', '& some other &stuff;');
   $x->div_close();
   $x->body_close();
   $x->html_close();
@@ -802,7 +822,7 @@ Will produce this nice output:
     <body>
       <div id="content">
         <p class="test">Some &lt;&lt;odd&gt;&gt; input</p>
-        <p class="test">&amp; some other &stuff;</p>
+        <ns:p class="test">&amp; some other &stuff;</ns:p>
       </div>
     </body>
   </html>
@@ -996,6 +1016,26 @@ an element then it will be rendered as empty. Ie, $x->br() produces:
 
     <br />
 
+=head2 $x->ns__element_open(...)
+
+Same as $x->element_open but prefixed with an XML namespace. Equivalent to
+the following.
+
+  $x->_ns('ns');
+  $x->element_open(...);
+  ...
+  $x->element_close;
+  $x->_ns(undef);
+
+=head2 $x->ns__element(...)
+
+Same as $x->element but prefixed with an XML namespace. Equivalent to
+the following.
+
+  $x->_ns('ns');
+  $x->element(...);
+  $x->_ns(undef);
+
 =head2 $x->_comment($comment)
 
 Add an XML comment to $x. Is almost the same as this:
@@ -1103,6 +1143,12 @@ don't know if we have the root element or not.
 
 Returns the list of the languages that have been specified by _set_lang.
 
+=head2 $x->_ns($namespace)
+
+Sets the XML namespace for future elements added with element() or
+element_open(). Use 'undef' for no namespace. If you just want a single-shot
+namespace you can also call element methods with a namespace postfixed by
+'__' (two underscores).
 
 =head2 $x->_debug(1|0)
 
