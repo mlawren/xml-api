@@ -3,9 +3,9 @@ package XML::API::Element;
 use strict;
 use warnings;
 use Carp qw(croak);
-use Scalar::Util qw(weaken);
+use Scalar::Util qw(weaken refaddr);
 
-our $VERSION = '0.18';
+our $VERSION = '0.19';
 
 sub new {
     my $proto = shift;
@@ -192,7 +192,7 @@ use Carp qw(carp croak confess);
 use UNIVERSAL;
 use XML::SAX;
 
-our $VERSION          = '0.18';
+our $VERSION          = '0.19';
 our $DEFAULT_ENCODING = 'UTF-8';
 our $ENCODING         = undef;
 our $Indent           = '  ';
@@ -271,7 +271,7 @@ sub _add {
 
     foreach my $item (@_) {
         if (UNIVERSAL::isa($item, __PACKAGE__)) {
-            if (\$item == \$self) {
+            if (Scalar::Util::refaddr($item) == Scalar::Util::refaddr($self)) {
                 croak 'Cannot _add object to itself';
             }
             if (!@{$item->{elements}}) {
@@ -633,10 +633,43 @@ sub _set_lang {
 }
 
 
+sub _lang {
+    my $self = shift;
+
+    if ($self->{current}) {
+        return $self->{current}->{attrs}->{'xml:lang'}
+            if(exists($self->{current}->{attrs}->{'xml:lang'}));
+
+        my $e = $self->{current};
+        while ($e = $e->{parent}) {
+            return $e->{attrs}->{'xml:lang'}
+                if(exists($e->{attrs}->{'xml:lang'}));
+        }
+    }
+    return $self->{langroot};
+}
+
 
 sub _langs {
     my $self = shift;
     return keys %{$self->{langs}};
+}
+
+
+sub _dir {
+    my $self = shift;
+
+    if ($self->{current}) {
+        return $self->{current}->{attrs}->{'dir'}
+            if(exists($self->{current}->{attrs}->{'dir'}));
+
+        my $e = $self->{current};
+        while ($e = $e->{parent}) {
+            return $e->{attrs}->{'dir'}
+                if(exists($e->{attrs}->{'dir'}));
+        }
+    }
+    return $self->{dirroot};
 }
 
 
@@ -788,7 +821,7 @@ XML::API - Perl extension for writing XML
 
 =head1 VERSION
 
-0.18
+0.19
 
 =head1 SYNOPSIS
 
@@ -1138,10 +1171,23 @@ added to the root element instead of the next one, unless $x is
 a generic XML document. Without a XML::API::<class> object we
 don't know if we have the root element or not.
 
+=head2 $x->_lang
+
+Returns the language of the B<current element>. Note that this is not
+always the same as the last value given to _set_lang, but depends on
+what the current element is. Returns 'undef' if the document has no
+'xml:lang' at all.
 
 =head2 $x->_langs
 
 Returns the list of the languages that have been specified by _set_lang.
+
+=head2 $x->_dir
+
+Returns the text direction of the B<current element>. Note that this is
+not always the same as the last value given to _set_lang, but depends on
+what the current element is. Returns 'undef' if the document has no
+direction specified.
 
 =head2 $x->_ns($namespace)
 

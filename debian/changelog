@@ -1,3 +1,9 @@
+libxml-api-perl (0.19-1) stable; urgency=low
+
+  * New upstream.
+
+ -- Mark Lawrence <nomad@null.net>  Fri, 21 Mar 2008 08:50:53 +0100
+
 libxml-api-perl (0.18-1) stable; urgency=low
 
   * New upstream.
