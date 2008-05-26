@@ -604,6 +604,26 @@ sub _parse {
 }
 
 
+sub _parse_chunk {
+    my $self = shift;
+    my $current = $self->{current};
+
+    foreach (@_) {
+        next unless(defined($_) and $_ ne '');
+        my $parser = XML::SAX::ParserFactory->parser(
+            Handler => XML::API::SAXHandler->new(xmlapi => $self),
+        );
+
+        # remove leading and trailing space, otherwise SAX barfs at us.
+        (my $t = $_) =~ s/(^\s+)|(\s+$)//go;
+        $parser->parse_chunk($t);
+    }
+
+    # always make sure that we finish where we started
+    $self->{current} = $current;
+}
+
+
 sub _attrs {
     my $self  = shift;
 
@@ -1114,6 +1134,14 @@ A shortcut for adding $script inside a pair of
 Adds content to the current element, but will parse it for xml elements
 and add them as method calls. Regardless of $content (missing end tags etc)
 the current element will remain the same. Relies on XML::SAX to do the parsing.
+
+=head2 $x->_parse_chunk(@content)
+
+Adds content to the current element, but will parse it for xml elements
+and add them as method calls. Regardless of $content (missing end tags etc)
+the current element will remain the same. Relies on XML::SAX to do the
+parsing, but using the "parse_chunk" method. This method is suitable for
+parsing xml fragments which are not necessarily complete.
 
 =head2 $x->_ast(@content)
 

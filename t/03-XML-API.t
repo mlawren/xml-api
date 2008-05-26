@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 15;
+use Test::More tests => 17;
 use Test::Exception;
 use Test::Memory::Cycle;
 
@@ -16,12 +16,14 @@ can_ok('XML::API', qw/
     _add
     _ast
     _parse
+    _parse_chunk
     _current
     _set_id
     _goto
     _attrs
     _set_lang
     _langs
+    _css
     _cdata
     _javascript
     _as_string
@@ -124,7 +126,54 @@ is($x, '<?xml version="1.0" encoding="UTF-8" ?>
   </p>
 </e>', 'e c n p escaped and raw content with parsed data');
 
-is($x->_fast_string, '<?xml version="1.0" encoding="UTF-8" ?><e><c>content</c><n attr="1"><n2>content<n3></n3><![CDATA[my < CDATA]]></n2></n><p>&lt;raw /&gt;<raw /><div class="divclass"><p>text</p></div></p></e>'
+
+$x->_parse_chunk('<div class="divclass"><p>text</p></div>');
+
+is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+<e>
+  <c>content</c>
+  <n attr="1">
+    <n2>content
+      <n3 />
+      <![CDATA[my < CDATA]]>
+    </n2>
+  </n>
+  <p>&lt;raw /&gt;<raw />
+    <div class="divclass">
+      <p>text</p>
+    </div>
+    <div class="divclass">
+      <p>text</p>
+    </div>
+  </p>
+</e>', 'e c n p escaped and raw content with parsed data');
+
+$x->style_open(-type => 'text/css');
+$x->_css('margin: 0;');
+$x->style_close();
+
+is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+<e>
+  <c>content</c>
+  <n attr="1">
+    <n2>content
+      <n3 />
+      <![CDATA[my < CDATA]]>
+    </n2>
+  </n>
+  <p>&lt;raw /&gt;<raw />
+    <div class="divclass">
+      <p>text</p>
+    </div>
+    <div class="divclass">
+      <p>text</p>
+    </div>
+    <style type="text/css">/*<![CDATA[*/ margin: 0; /*]]>*/</style>
+  </p>
+</e>', 'e c n p escaped and raw content with parsed data');
+
+
+is($x->_fast_string, '<?xml version="1.0" encoding="UTF-8" ?><e><c>content</c><n attr="1"><n2>content<n3></n3><![CDATA[my < CDATA]]></n2></n><p>&lt;raw /&gt;<raw /><div class="divclass"><p>text</p></div><div class="divclass"><p>text</p></div><style type="text/css">/*<![CDATA[*/ margin: 0; /*]]>*/</style></p></e>'
 , 'e c n p escaped and raw content with parsed data FAST');
 
 my $a = XML::API->new;
