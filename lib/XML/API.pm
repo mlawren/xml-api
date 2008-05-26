@@ -560,6 +560,19 @@ sub _cdata {
 }
 
 
+sub _css {
+    my $self = shift;
+    my $content = shift;
+    if ($content =~ /\n/s) {
+        $self->_raw('/*<![CDATA[*/'."\n". $content .'/*]]>*/');
+    }
+    else {
+        $self->_raw('/*<![CDATA[*/ '. $content .' /*]]>*/');
+    }
+    return;
+}
+
+
 sub _javascript {
     my $self = shift;
     $self->script_open(-type => 'text/javascript');
@@ -1084,12 +1097,17 @@ will be replaced with '- -'.
 
 A shortcut for $x->_raw("\n<![CDATA[", $content, " ]]>");
 
+=head2 $x->_css($content )
+
+Adds $content inside a pair of CDATA tags which are encapsulated
+inside CSS comments. Similar to:
+
+ $x->_raw('/*<![CDATA[*/ '. $content .' /*]]>*/');
 
 =head2 $x->_javascript($script )
 
 A shortcut for adding $script inside a pair of
 <script type="text/javascript"> elements and a _CDATA tag.
-
 
 =head2 $x->_parse(@content)
 
