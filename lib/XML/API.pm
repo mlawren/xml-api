@@ -157,14 +157,12 @@ sub start_element {
     }
     $self->{xml_api_ignore} = 0;
 
-    my $e = $hash->{Name} .'_open';
-
     my $attrs = {};
     foreach my $val (values %{$hash->{Attributes}}) {
         $attrs->{$val->{Name}} = $val->{Value};
     }
 
-    $self->{xmlapi}->$e($attrs);
+    $self->{xmlapi}->_open($hash->{Name}, $attrs);
     return;
 }
 
@@ -185,8 +183,7 @@ sub end_element {
         return;
     }
 
-    my $e = $hash->{Name} .'_close';
-    $self->{xmlapi}->$e;
+    $self->{xmlapi}->_close($hash->{Name});
     return;
 }
 
@@ -527,11 +524,9 @@ sub _ast {
 
     foreach my $i (1 .. int(scalar(@_) / 2)) {
         my ($e,$val) = splice(@_,0,2);
-        my $open  = $e .'_open';
-        my $close = $e .'_close';
 
         if (!ref($val)) {
-            $self->$e($val);
+            $self->_element($e,$val);
             next;
         }
 
@@ -561,7 +556,7 @@ sub _ast {
             push(@contents, $val);
         }
 
-        $self->$open($attr);
+        $self->_open($e,$attr);
 
         foreach my $c (@contents) {
             if (ref($c) and ref($c) eq 'ARRAY') {
@@ -569,18 +564,16 @@ sub _ast {
             }
             elsif (ref($c) and ref($c) eq 'HASH') {
                 my ($k,$v) = each %$c;
-                my $o = $k.'_open';
-                my $c = $k.'_close';
-                $self->$o;
+                $self->_open($k);
                 $self->_add($v);
-                $self->$c;
+                $self->_close($k);
             }
             else {
                 $self->_add($c);
             }
         }
 
-        $self->$close;
+        $self->_close($e);
     }
 
     return;
