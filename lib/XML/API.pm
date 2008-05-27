@@ -550,7 +550,11 @@ sub _ast {
             }
             elsif (ref($c) and ref($c) eq 'HASH') {
                 my ($k,$v) = each %$c;
-                $self->$k($v);
+                my $o = $k.'_open';
+                my $c = $k.'_close';
+                $self->$o;
+                $self->_add($v);
+                $self->$c;
             }
             else {
                 $self->_add($c);
@@ -1355,7 +1359,10 @@ Version 0.15 removed the pointless _print method.
 
 =head1 SEE ALSO
 
-You can see XML::API in action in L<NCGI>.
+L<XML::Generator> and L<XML::Writer> are other xml producing modules.
+
+If you are thinking of using B<XML::API> in a CGI program check out
+L<NCGI>.
 
 =head1 AUTHOR
 
