@@ -92,6 +92,11 @@ sub as_string {
             $complex = 1;
             $str .= "\n" . $c->as_string($indent . $growindent, $growindent);
         }
+        elsif (UNIVERSAL::isa($c, 'XML::API')) { # assume it is complex?
+            $str .= "\n" . join("\n",
+                map {$_->as_string($indent . $growindent, $growindent)}
+                     $c->_elements);
+        }
         else {
             $str .= $c if (defined($c));
         }
@@ -113,8 +118,13 @@ sub fast_string {
 
     return  '<'. ($self->{ns} ? $self->{ns}.':' : '') 
            . $self->{element} . $self->attrs_as_string .'>'
-           . join('', map {UNIVERSAL::isa($_, __PACKAGE__) ?
-                           $_->fast_string : $_} @{$self->{contents}})
+           . join('', map {
+                UNIVERSAL::isa($_, __PACKAGE__)
+                    ? $_->fast_string
+                    : (UNIVERSAL::isa($_, 'XML::API')
+                        ? join('', map {$_->fast_string} $_->_elements)
+                        : $_)
+                } @{$self->{contents}})
            . '</'. ($self->{ns} ? $self->{ns}.':' : '') . $self->{element}
            . '>';
 }
@@ -190,6 +200,7 @@ use warnings;
 use overload '""' => \&_as_string, 'fallback' => 1;
 use Carp qw(carp croak confess);
 use UNIVERSAL;
+use Scalar::Util qw(weaken refaddr);
 use XML::SAX;
 
 our $VERSION          = '0.19';
@@ -265,27 +276,30 @@ sub _doctype {
     return '';
 }
 
+sub _elements {
+    my $self = shift;
+    return @{$self->{elements}};
+}
+
 sub _add {
     my $self = shift;
     $self->{string} = undef;
 
     foreach my $item (@_) {
         if (UNIVERSAL::isa($item, __PACKAGE__)) {
-            if (Scalar::Util::refaddr($item) == Scalar::Util::refaddr($self)) {
+            if (refaddr($item) == refaddr($self)) {
                 croak 'Cannot _add object to itself';
             }
-            if (!@{$item->{elements}}) {
-                carp 'failed to _add object with no elements';
-                return;
-            }
             if (!$self->{current}) {
-                push(@{$self->{elements}}, @{$item->{elements}});
-                $item->{elements} = $self->{elements};
+                push(@{$self->{elements}}, $item);
             }
             else {
-                $self->{current}->add(@{$item->{elements}});
-                $item->{elements} = $self->{current}->{contents};
+                $self->{current}->add($item);
             }
+            bless($item, ref($self));
+            $item->{parent} = $self;
+            weaken($item->{parent});
+
             foreach my $lang (keys %{$item->{langs}}) {
                 $self->{langs}->{$lang} = 1;
             }
@@ -297,11 +311,16 @@ sub _add {
 
             if (UNIVERSAL::isa($item, 'XML::API::Element')) {
                 $self->{current}->add($item);
-                return;
             }
-
-            $self->{current}->add(_escapeXML($item));
-            return;
+            elsif (UNIVERSAL::isa($item, 'XML::API::Cache')) {
+                foreach my $lang ($item->langs) {
+                    $self->{langs}->{$lang} = 1;
+                }
+                $self->{current}->add($item);
+            }
+            else {
+                $self->{current}->add(_escapeXML($item));
+            }
         }
     }
 }
@@ -652,13 +671,15 @@ sub _set_lang {
     my $lang = shift || croak 'usage: set_lang($lang)';
     my $dir  = shift;
 
-    if (ref($self) eq __PACKAGE__ or $self->{langroot}) {
-        $self->{langnext} = $lang;
-        $self->{dirnext} = $dir if($dir);
+    if ($self->{has_root_element} and !$self->_lang) {
+        $self->{elements}->[0]->{attrs}->{'xml:lang'} = $lang;
+        if ($dir) {
+            $self->{elements}->[0]->{attrs}->{'dir'} = $dir;
+        }
     }
     else {
-        $self->{langroot} = $lang;
-        $self->{dirroot} = $dir if($dir);
+        $self->{langnext} = $lang;
+        $self->{dirnext} = $dir if($dir);
     }
     $self->{langs}->{$lang} = 1;
 
@@ -679,7 +700,9 @@ sub _lang {
                 if(exists($e->{attrs}->{'xml:lang'}));
         }
     }
-    return $self->{langroot};
+    return $self->{langnext} if ($self->{langnext});
+    return $self->{parent}->_lang if ($self->{parent});
+    return;
 }
 
 
@@ -702,7 +725,9 @@ sub _dir {
                 if(exists($e->{attrs}->{'dir'}));
         }
     }
-    return $self->{dirroot};
+    return $self->{dirnext} if ($self->{dirnext});
+    return $self->{parent}->_dir if ($self->{parent});
+    return;
 }
 
 
@@ -784,17 +809,14 @@ sub _as_string {
     if (ref($self) eq __PACKAGE__ or $self->{has_root_element}) {
         $string = qq{<?xml version="1.0" encoding="$self->{encoding}" ?>\n};
         $string .= $self->_doctype . "\n" if($self->_doctype);
-        if ($self->{langroot}) {
-            $self->{elements}->[0]->{attrs}->{'xml:lang'} = $self->{langroot};
-        }
-        if ($self->{dirroot}) {
-            $self->{elements}->[0]->{attrs}->{'dir'} = $self->{dirroot};
-        }
     }
-    foreach my $e (@{$self->{elements}}) {
-        $string .= $e->as_string('', '  ');
-    }
-#    $self->{string} = $string;
+
+    $string .= join("\n", map {
+            UNIVERSAL::isa($_, __PACKAGE__)
+                ? join("\n", map {$_->as_string} $_->_elements)
+                : $_->as_string('', '  ')
+        } @{$self->{elements}});
+
     return $string;
 }
 
@@ -810,17 +832,9 @@ sub _fast_string {
     if (ref($self) eq __PACKAGE__ or $self->{has_root_element}) {
         $string = '<?xml version="1.0" encoding="'.$self->{encoding}.'" ?>';
         $string .= $self->_doctype if($self->_doctype);
-        if ($self->{langroot}) {
-            $self->{elements}->[0]->{attrs}->{'xml:lang'} = $self->{langroot};
-        }
-        if ($self->{dirroot}) {
-            $self->{elements}->[0]->{attrs}->{'dir'} = $self->{dirroot};
-        }
     }
-    foreach my $e (@{$self->{elements}}) {
-        $string .= $e->fast_string();
-    }
-#    $self->{string} = $string;
+
+    $string .= join("\n", map {$_->fast_string('', '  ')} @{$self->{elements}});
     return $string;
 }
 
