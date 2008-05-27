@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 25;
+use Test::More tests => 29;
 use Test::Exception;
 use Test::Memory::Cycle;
 
@@ -13,7 +13,10 @@ BEGIN {
 can_ok('XML::API', qw/
     _encoding
     _debug
+    _open
     _add
+    _raw
+    _close
     _ast
     _parse
     _parse_chunk
@@ -41,6 +44,29 @@ throws_ok {
 my $x = XML::API->new;
 isa_ok($x, 'XML::API');
 
+$x->_open('e');
+is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+<e />', 'e open');
+
+$x->_close('e');
+is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+<e />', 'e close');
+
+$x = XML::API->new;
+$x->_open('e',-type => 'mytype','mycontent');
+is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+<e type="mytype">mycontent</e>', 'e open content');
+
+$x->_add(' more content');
+$x->f('f content');
+
+$x->_close('e');
+is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+<e type="mytype">mycontent more content
+  <f>f content</f>
+</e>', 'e content');
+
+$x = XML::API->new;
 $x->e_open();
 is($x, '<?xml version="1.0" encoding="UTF-8" ?>
 <e />', 'e content');

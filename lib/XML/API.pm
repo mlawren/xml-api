@@ -5,7 +5,7 @@ use warnings;
 use Carp qw(croak);
 use Scalar::Util qw(weaken refaddr);
 
-our $VERSION = '0.19';
+our $VERSION = '0.20';
 
 sub new {
     my $proto = shift;
@@ -203,7 +203,7 @@ use UNIVERSAL;
 use Scalar::Util qw(weaken refaddr);
 use XML::SAX;
 
-our $VERSION          = '0.19';
+our $VERSION          = '0.20';
 our $DEFAULT_ENCODING = 'UTF-8';
 our $ENCODING         = undef;
 our $Indent           = '  ';
@@ -256,30 +256,127 @@ sub new {
 }
 
 
-#
-# These should be overridden by derived classes
-#
-#sub _xsd {
-#    my $self = shift;
-#    return undef;
-#}
-
 sub _root_element {
     return '';
 }
+
 
 sub _root_attrs {
     return {};
 }
 
+
 sub _doctype {
     return '';
 }
+
 
 sub _elements {
     my $self = shift;
     return @{$self->{elements}};
 }
+
+
+sub _open {
+    my $self    = shift;
+    my $element = shift || croak '_open($element,...)';
+
+    my $namespace = $self->{namespace};
+
+    # reset the output string in case it has been cached
+    $self->{string} = undef;
+
+    if ($element eq $self->_root_element) {
+        $self->{has_root_element} = 1;
+    }
+
+    my $attrs = {};
+    my @content;
+
+    my $total = scalar(@_) - 1;
+    my $next;
+
+    foreach my $i (0..$total) {
+        if ($next) {
+            $next = undef;
+            next;
+        }
+
+        my $arg  = $_[$i];
+        if (ref($arg) eq 'HASH') {
+            while (my ($key,$val) = each %$arg) {
+                $attrs->{$key} = _escapeXML($val);
+                if (!defined($val)) {
+                    carp "attribute '$key' undefined (element '$element')";
+                    $attrs->{$key} = ''
+                }
+            }
+        }
+        elsif (defined($arg) and $arg =~ m/^-[^0-9\.]+/o) {
+            $arg =~ s/^-//o;
+            $attrs->{$arg} = _escapeXML($_[++$i]);
+            if (!defined($attrs->{$arg})) {
+                carp "attribute '$arg' undefined (element '$element') ";
+                $attrs->{$arg} = ''
+            }
+            $next = 1;
+            next;
+        }
+        else {
+            push(@content, $arg);
+        }
+    }
+
+    #
+    # Start with the default root element attributes and add those
+    # given if this is the root element
+    #
+    if ($element eq $self->_root_element) {
+        my $rootattrs = $self->_root_attrs;
+        while (my ($key,$val) = each %$attrs) {
+            $rootattrs->{$key} = $val;
+        }
+        $attrs = $rootattrs;
+    }
+
+    my ($file,$line) = (caller)[1,2] if($self->{debug});
+
+    if ($self->{langnext}) {
+        $attrs->{'xml:lang'} = delete $self->{langnext};
+    }
+    if ($self->{dirnext}) {
+        $attrs->{'dir'} = delete $self->{dirnext};
+    }
+
+    my $e;
+    if ($self->{current}) {
+        $e = XML::API::Element->new(
+            element  => $element,
+            attrs    => $attrs,
+            ns       => $namespace,
+            parent   => $self->{current},
+        );
+        $self->_add($e);
+    }
+    else {
+        $e = XML::API::Element->new(
+            element  => $element,
+            attrs    => $attrs,
+            ns       => $namespace,
+        );
+        push(@{$self->{elements}}, $e);
+    }
+
+    $self->{current} = $e;
+    $self->_add(@content);
+
+    $self->_comment("DEBUG: '$element' (open) at $file:$line")
+        if($self->{debug});
+
+    return $e;
+}
+
+
 
 sub _add {
     my $self = shift;
@@ -342,6 +439,35 @@ sub _raw {
     }
 }
 
+
+sub _close {
+    my $self = shift;
+    my $element = shift || croak '_close($element)';
+
+    my ($file,$line) = (caller)[1,2] if($self->{debug});
+
+    if (!$self->{current}) {
+        carp 'attempt to close non-existent element "' . $element . '"';
+        return;
+    }
+
+    if ($element eq $self->{current}->{element}) {
+        if ($self->{current}->parent) {
+            $self->{current} = $self->{current}->parent;
+            $self->_comment("DEBUG: '$element' close at $file:$line") if($self->{debug});
+        }
+        else {
+            $self->{current} = undef;
+        }
+    }
+    else {
+        carp 'attempted to close element "' . $element . '" when current ' .
+             'element is "' . $self->{current}->{element} . '"';
+    }
+    return;
+}
+
+
 #
 # The implementation for element, element_open and element_close
 #
@@ -352,153 +478,37 @@ sub AUTOLOAD {
 
     my ($open, $close) = (0,0);
 
-    if ($element =~ s/.*::(.*)_open$/$1/o) {
-          $open = 1;  
+    if ($element =~ s/.*::(.+)_open$/$1/o) {
+        my $old_ns = $self->{namespace};
+
+        if ($element =~ s/(.+)__(.+)/$2/o) {
+            $self->{namespace} = $1;
+        }
+
+        my $e = $self->_open($element, @_);
+        $self->{namespace} = $old_ns;
+        return $e;
     }
-    elsif ($element =~ s/.*::(.*)_close$/$1/o) {
-          $close = 1;  
-    }
-    else  {
-        $element =~ s/.*:://o;
+    elsif ($element =~ s/.*::(.+)_close$/$1/o) {
+        $element =~ s/(.+)__(.+)/$2/o;
+        return $self->_close($element);
     }
 
+    $element =~ s/.*:://o;
     croak 'element not defined' unless($element);
 
     if ($element =~ /^_/o) {
         croak 'Undefined subroutine &' . ref($self) . "::$element called";
-        return undef;
     }
 
-    my $namespace = $self->{namespace};
+    my $old_ns = $self->{namespace};
+
     if ($element =~ s/(.+)__(.+)/$2/o) {
-        $namespace = $1;
+        $self->{namespace} = $1;
     }
-
-    # reset the output string in case it has been cached
-    $self->{string} = undef;
-
-    if ($element eq $self->_root_element) {
-        $self->{has_root_element} = 1;
-    }
-
-    my $attrs = {};
-    my @content;
-
-    my $total = scalar(@_) - 1;
-    my $next;
-
-    foreach my $i (0..$total) {
-        if ($next) {
-            $next = undef;
-            next;
-        }
-
-        my $arg  = $_[$i];
-        if (ref($arg) eq 'HASH') {
-            while (my ($key,$val) = each %$arg) {
-                $attrs->{$key} = _escapeXML($val);
-                if (!defined($val)) {
-                    carp "attribute '$key' undefined (element '$element')";
-                    $attrs->{$key} = ''
-                }
-            }
-        }
-        elsif (defined($arg) and $arg =~ m/^-[^0-9\.]+/o) {
-            $arg =~ s/^-//o;
-            $attrs->{$arg} = _escapeXML($_[++$i]);
-            if (!defined($attrs->{$arg})) {
-                carp "attribute '$arg' undefined (element '$element') ";
-                $attrs->{$arg} = ''
-            }
-            $next = 1;
-            next;
-        }
-        else {
-            push(@content, $arg);
-        }
-    }
-
-    #
-    # Start with the default root element attributes and add those
-    # given if this is the root element
-    #
-    if ($element eq $self->_root_element) {
-        my $rootattrs = $self->_root_attrs;
-        while (my ($key,$val) = each %$attrs) {
-            $rootattrs->{$key} = $val;
-        }
-        $attrs = $rootattrs;
-    }
-
-    my ($file,$line) = (caller)[1,2] if($self->{debug});
-
-    if ($close) {
-        if (!$self->{current}) {
-            carp 'attempt to close non-existent element "' . $element . '"';
-            return;
-        }
-
-        if ($element eq $self->{current}->{element}) {
-            if ($self->{current}->parent) {
-                $self->{current} = $self->{current}->parent;
-                $self->_comment("DEBUG: '$element' close at $file:$line") if($self->{debug});
-                return;
-            }
-            else {
-                $self->{current} = undef;
-                return;
-            }
-        }
-        else {
-            carp 'attempted to close element "' . $element . '" when current ' .
-                 'element is "' . $self->{current}->{element} . '"';
-            return;
-        }
-    }
-
-    #
-    # Either element() or element_open()
-    #
-    if ($self->{langnext}) {
-        $attrs->{'xml:lang'} = delete $self->{langnext};
-    }
-    if ($self->{dirnext}) {
-        $attrs->{'dir'} = delete $self->{dirnext};
-    }
-
-    my $e;
-    if ($self->{current}) {
-        $e = XML::API::Element->new(
-            element  => $element,
-            attrs    => $attrs,
-            ns       => $namespace,
-            parent   => $self->{current},
-        );
-        $self->_add($e);
-    }
-    else {
-        $e = XML::API::Element->new(
-            element  => $element,
-            attrs    => $attrs,
-            ns       => $namespace,
-        );
-        push(@{$self->{elements}}, $e);
-    }
-
-    if ($open) {
-        $self->{current} = $e;
-        $self->_add(@content);
-    }
-    else {
-        my $old = $self->{current};
-        $self->{current} = $e;
-        $self->_add(@content);
-        $self->{current} = $old;
-    }
-
-    $self->_comment("DEBUG: '$element' (open) at $file:$line")
-        if($self->{debug});
-
+    my $e = $self->_open($element, @_);
+    $self->{namespace} = $old_ns;
+    $self->_close($element);
     return $e;
 }
 
@@ -881,7 +891,7 @@ XML::API - Perl extension for writing XML
 
 =head1 VERSION
 
-0.19
+0.20
 
 =head1 SYNOPSIS
 
@@ -1047,6 +1057,13 @@ then $x->head_open(-attribute => $value) means the tree is now:
     </head>
   </html>
 
+
+=head2 $x->_open('element', -attribute => $value, {attr2 => 'val2'}, $content)
+
+The generic/underlying implementation of $x->element_open. Useful if your
+element names are not suitable as Perl method calls, or are otherwise funny
+(eg starting with '_').
+
 =head2 $x->_add($content)
 
 Add $content to the 'current' element. If there is no current element
@@ -1091,6 +1108,11 @@ then $x->p_close() means the tree is now:
 If you try to call a _close() method that doesn't match the current
 element a warning will be issued and the call will fail.
 
+=head2 $x->_close('element')
+
+The generic/underlying implementation of $x->element_close. Useful if your
+element names are not suitable as Perl method calls, or are otherwise funny
+(eg starting with '_').
 
 =head2 $x->element(-attribute => $value, {attr2 => 'val2'}, $content)
 
