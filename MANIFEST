@@ -33,6 +33,7 @@ t/04-parse.t
 t/benchmark.pl
 t/cache.t
 t/hyphens.t
+t/oddball.t
 t/pod-coverage.t
 t/pod.t
 t/synopsis.t

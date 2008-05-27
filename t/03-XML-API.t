@@ -17,6 +17,7 @@ can_ok('XML::API', qw/
     _add
     _raw
     _close
+    _element
     _ast
     _parse
     _parse_chunk
@@ -58,7 +59,7 @@ is($x, '<?xml version="1.0" encoding="UTF-8" ?>
 <e type="mytype">mycontent</e>', 'e open content');
 
 $x->_add(' more content');
-$x->f('f content');
+$x->_element('f', 'f content');
 
 $x->_close('e');
 is($x, '<?xml version="1.0" encoding="UTF-8" ?>

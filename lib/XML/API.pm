@@ -5,7 +5,7 @@ use warnings;
 use Carp qw(croak);
 use Scalar::Util qw(weaken refaddr);
 
-our $VERSION = '0.20';
+our $VERSION = '0.21';
 
 sub new {
     my $proto = shift;
@@ -203,7 +203,7 @@ use UNIVERSAL;
 use Scalar::Util qw(weaken refaddr);
 use XML::SAX;
 
-our $VERSION          = '0.20';
+our $VERSION          = '0.21';
 our $DEFAULT_ENCODING = 'UTF-8';
 our $ENCODING         = undef;
 our $Indent           = '  ';
@@ -465,6 +465,15 @@ sub _close {
              'element is "' . $self->{current}->{element} . '"';
     }
     return;
+}
+
+
+sub _element {
+    my $self = shift;
+    my $element = shift || croak '_element($element)';
+    my $e = $self->_open($element,@_);
+    $self->_close($element);
+    return $e;
 }
 
 
@@ -891,7 +900,7 @@ XML::API - Perl extension for writing XML
 
 =head1 VERSION
 
-0.20
+0.21
 
 =head1 SYNOPSIS
 
@@ -1130,6 +1139,12 @@ If $content is not given (or never added with the _add method) for
 an element then it will be rendered as empty. Ie, $x->br() produces:
 
     <br />
+
+=head2 $x->_element('element',...)
+
+The generic implementation of $x->element. Useful if your element names
+are not suitable as Perl method calls, or are otherwise funny (eg
+starting with '_').
 
 =head2 $x->ns__element_open(...)
 
