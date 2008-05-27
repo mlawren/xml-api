@@ -615,6 +615,10 @@ sub _parse {
 
         # remove leading and trailing space, otherwise SAX barfs at us.
         (my $t = $_) =~ s/(^\s+)|(\s+$)//go;
+        # escape '&' as well
+        $t =~ s/\&(\w+\;)/__AMP__$1/go;
+        # escape '&' in urls
+        $t =~ s/\&(\w+=)/__AMP__amp;$1/go;
         $parser->parse_string('<_xml_api_ignore>'.$t.'</_xml_api_ignore>');
     }
 
@@ -635,6 +639,10 @@ sub _parse_chunk {
 
         # remove leading and trailing space, otherwise SAX barfs at us.
         (my $t = $_) =~ s/(^\s+)|(\s+$)//go;
+        # escape '&' as well
+        $t =~ s/\&(\w+\;)/__AMP__$1/go;
+        # escape '&' in urls
+        $t =~ s/\&(\w+=)/__AMP__amp;$1/go;
         $parser->parse_chunk($t);
     }
 
@@ -842,11 +850,12 @@ sub _fast_string {
 sub _escapeXML {
     my $data = $_[0];
     return '' unless(defined($data));
-    if ($data =~ /[\&\<\>\"]/o) {
+    if ($data =~ /[\&\<\>\"(__AMP__)]/o) {
         $data =~ s/\&(?!\w+\;)/\&amp\;/go;
         $data =~ s/\</\&lt\;/go;
         $data =~ s/\>/\&gt\;/go;
         $data =~ s/\"/\&quot\;/go;
+        $data =~ s/__AMP__/\&/go;
     }
     return $data;
 }
@@ -1147,7 +1156,9 @@ A shortcut for adding $script inside a pair of
 
 Adds content to the current element, but will parse it for xml elements
 and add them as method calls. Regardless of $content (missing end tags etc)
-the current element will remain the same. Relies on XML::SAX to do the parsing.
+the current element will remain the same. Relies on XML::SAX to do the
+parsing using the "parse_string" method. In this case XML::SAX requires
+that the content is a complete xml document.
 
 =head2 $x->_parse_chunk(@content)
 

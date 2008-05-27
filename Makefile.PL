@@ -5,6 +5,7 @@ name            'XML-API';
 license         'GPL';
 all_from        'lib/XML/API.pm';
 requires        'XML::SAX'            => 0; 
+requires        'XML::LibXML::SAX'    => 0; 
 requires        'Scalar::Util'        => 0; 
 build_requires  'Test::More'          => '0.42';
 build_requires  'Test::Exception'     => 0;
