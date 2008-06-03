@@ -5,7 +5,7 @@ use warnings;
 use Carp qw(croak);
 use Scalar::Util qw(weaken refaddr);
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 sub new {
     my $proto = shift;
@@ -200,7 +200,7 @@ use UNIVERSAL;
 use Scalar::Util qw(weaken refaddr);
 use XML::SAX;
 
-our $VERSION          = '0.21';
+our $VERSION          = '0.22';
 our $DEFAULT_ENCODING = 'UTF-8';
 our $ENCODING         = undef;
 our $Indent           = '  ';
@@ -625,6 +625,7 @@ sub _parse {
 
     foreach (@_) {
         next unless(defined($_) and $_ ne '');
+        local $XML::SAX::ParserPackage = 'XML::LibXML::SAX';
         my $parser = XML::SAX::ParserFactory->parser(
             Handler => XML::API::SAXHandler->new(xmlapi => $self),
         );
@@ -649,6 +650,7 @@ sub _parse_chunk {
 
     foreach (@_) {
         next unless(defined($_) and $_ ne '');
+        local $XML::SAX::ParserPackage = 'XML::LibXML::SAX';
         my $parser = XML::SAX::ParserFactory->parser(
             Handler => XML::API::SAXHandler->new(xmlapi => $self),
         );
@@ -893,7 +895,7 @@ XML::API - Perl extension for writing XML
 
 =head1 VERSION
 
-0.21
+0.22
 
 =head1 SYNOPSIS
 

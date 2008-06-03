@@ -14,7 +14,7 @@ use warnings;
 use 5.006;
 use base qw(XML::API);
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 my $xsd = {};
 
