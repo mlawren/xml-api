@@ -5,7 +5,7 @@ use Carp qw(croak);
 use UNIVERSAL qw(isa);
 use overload '""' => \&content;
 
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 sub new {
     my $proto = shift;
