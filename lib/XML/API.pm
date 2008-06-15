@@ -206,7 +206,6 @@ our $ENCODING         = undef;
 our $Indent           = '  ';
 our $AUTOLOAD;
 
-my $string;
 
 # Not implemented yet:
 #  strict   => 0|1                # Optional, defaults to 0
@@ -821,16 +820,10 @@ sub _goto {
 
 
 sub _as_string {
-    my $self  = shift;
-    return '' unless $self->{elements};
-    return $self->{string} if ($self->{string});
+    my $self = shift;
+    my $file = shift;
 
-    my $grow = shift;
-    if (!defined($grow)) {
-        $grow = $Indent;
-    }
-
-    $string = '';
+    my $string = '';
 
     if (ref($self) eq __PACKAGE__ or $self->{has_root_element}) {
         $string = qq{<?xml version="1.0" encoding="$self->{encoding}" ?>\n};
@@ -843,24 +836,41 @@ sub _as_string {
                 : $_->as_string('', '  ')
         } @{$self->{elements}});
 
+    if ($file) {
+        open(FH, '>'.$file) || die "open '$file': $!";
+        if ($self->_encoding eq 'UTF-8') {
+            binmode(FH, ':utf8');
+        }
+        print FH $string;
+        close(FH);
+        return;
+    }
     return $string;
 }
 
 
-
 sub _fast_string {
-    my $self  = shift;
-    return '' unless $self->{elements};
-    return $self->{string} if ($self->{string});
+    my $self = shift;
+    my $file = shift;
 
-    $string = '';
+    my $string = '';
 
     if (ref($self) eq __PACKAGE__ or $self->{has_root_element}) {
-        $string = '<?xml version="1.0" encoding="'.$self->{encoding}.'" ?>';
+        $string = qq{<?xml version="1.0" encoding="$self->{encoding}" ?>};
         $string .= $self->_doctype if($self->_doctype);
     }
 
     $string .= join("\n", map {$_->fast_string('', '  ')} @{$self->{elements}});
+
+    if ($file) {
+        open(FH, '>'.$file) || die "open '$file': $!";
+        if ($self->_encoding eq 'UTF-8') {
+            binmode(FH, ':utf8');
+        }
+        print FH $string;
+        close(FH);
+        return;
+    }
     return $string;
 }
 
@@ -1335,7 +1345,7 @@ then later want to go back and modify it or fill in the details.
 
 =head1 OUTPUT
 
-=head2 $x->_as_string( )
+=head2 $x->_as_string($file)
 
 Returns the xml-rendered version of the object. If $x has the root
 element for the doctype, or if $x is a pure XML::API object then the
@@ -1344,15 +1354,16 @@ defined in the '_encoding' method documentation):
 
   <?xml version="1.0" encoding="UTF-8" ?>
 
-The xml is cached unless the object is modified so _as_string can be
-called mulitple times in a row with little cost.
+The optional $file argument will cause the string to be written out
+to disk instead of being returned.
 
-
-=head2 $x->_fast_string( )
+=head2 $x->_fast_string($file)
 
 Returns the rendered version of the XML document without newlines or
 indentation.
 
+The optional $file argument will cause the string to be written out
+to disk instead of being returned.
 
 =head1 OVERLOADING
 

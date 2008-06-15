@@ -1,8 +1,9 @@
 use strict;
 use warnings;
-use Test::More tests => 29;
+use Test::More tests => 34;
 use Test::Exception;
 use Test::Memory::Cycle;
+use File::Slurp;
 
 BEGIN {
     use_ok('XML::API');
@@ -199,9 +200,29 @@ is($x, '<?xml version="1.0" encoding="UTF-8" ?>
   </p>
 </e>', 'e c n p escaped and raw content with parsed data');
 
-
 is($x->_fast_string, '<?xml version="1.0" encoding="UTF-8" ?><e><c>content</c><n attr="1"><n2>content<n3></n3><![CDATA[my < CDATA]]></n2></n><p>&lt;raw /&gt;<raw /><div class="divclass"><p>text</p></div><div class="divclass"><p>text</p></div><style type="text/css">/*<![CDATA[*/ margin: 0; /*]]>*/</style></p></e>'
 , 'e c n p escaped and raw content with parsed data FAST');
+
+
+my $tfile = '_test.xml';
+unlink($tfile);
+ok(! -f $tfile, 'output file does not exist');
+$x->_as_string($tfile);
+ok(-f $tfile, 'output file created');
+
+my $text = read_file($tfile, binmode => ':utf8');
+is($x, $text, 'output file content matches');
+
+
+unlink($tfile);
+$x->_fast_string($tfile);
+ok(-f $tfile, 'fast output file created');
+
+$text = read_file($tfile, binmode => ':utf8');
+is($x->_fast_string, $text, 'fast output file content matches');
+
+END {unlink $tfile};
+
 
 my $a = XML::API->new;
 $a->_ast(
