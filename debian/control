@@ -1,7 +1,7 @@
 Source: libxml-api-perl
 Section: perl
 Priority: optional
-Build-Depends: debhelper (>= 4.0.2), libmodule-build-perl, libtest-exception-perl, libtest-pod-perl, libtest-pod-coverage-perl, libtest-memory-cycle-perl
+Build-Depends: debhelper (>= 4.0.2), libfile-slurp-perl, libtest-exception-perl, libtest-pod-perl, libtest-pod-coverage-perl, libtest-memory-cycle-perl
 Build-Depends-Indep: perl (>= 5.8.0-7)
 Maintainer: Mark Lawrence <nomad@null.net>
 Standards-Version: 3.6.1
