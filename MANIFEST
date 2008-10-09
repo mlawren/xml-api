@@ -1,10 +1,5 @@
 Changes
 Changes.old
-debian/changelog
-debian/compat
-debian/control
-debian/copyright
-debian/rules
 example/xml-api.cgi
 inc/Module/Install/Can.pm
 inc/Module/Install/Base.pm

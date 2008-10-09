@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 34;
+use Test::More tests => 35;
 use Test::Exception;
 use Test::Memory::Cycle;
 use File::Slurp;
@@ -67,6 +67,16 @@ is($x, '<?xml version="1.0" encoding="UTF-8" ?>
 <e type="mytype">mycontent more content
   <f>f content</f>
 </e>', 'e content');
+
+$x = XML::API->new;
+$x->e_open();
+
+$x->c_raw('<d>content</d>');
+is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+<e>
+  <c><d>content</d></c>
+</e>', 'e c d content');
+
 
 $x = XML::API->new;
 $x->e_open();

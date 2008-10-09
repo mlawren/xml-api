@@ -9,7 +9,7 @@ my $x = XML::API->new(doctype => 'xhtml');
 is($x->_lang, undef, 'current lang not defined');
 is($x->_dir, undef, 'current dir not defined');
 
-$x->html_open(undef);
+$x->html_open('');
 $x->_set_lang('en');
 
 ok($x->_langs == 1, 'first lang recorded');

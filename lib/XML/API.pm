@@ -5,7 +5,7 @@ use warnings;
 use Carp qw(croak);
 use Scalar::Util qw(weaken refaddr);
 
-our $VERSION = '0.23';
+our $VERSION = '0.24';
 
 sub new {
     my $proto = shift;
@@ -200,7 +200,7 @@ use UNIVERSAL;
 use Scalar::Util qw(weaken refaddr);
 use XML::SAX;
 
-our $VERSION          = '0.23';
+our $VERSION          = '0.24';
 our $DEFAULT_ENCODING = 'UTF-8';
 our $ENCODING         = undef;
 our $Indent           = '  ';
@@ -364,7 +364,12 @@ sub _open {
     }
 
     $self->{current} = $e;
-    $self->_add(@content);
+    if ($self->{_raw}) {
+        $self->_raw(@content);
+    }
+    else {
+        $self->_add(@content);
+    }
 
     $self->_comment("DEBUG: '$element' (open) at $file:$line")
         if($self->{debug});
@@ -379,6 +384,7 @@ sub _add {
     $self->{string} = undef;
 
     foreach my $item (@_) {
+        carp "undefined input" unless(defined($item));
         if (UNIVERSAL::isa($item, __PACKAGE__)) {
             if (refaddr($item) == refaddr($self)) {
                 croak 'Cannot _add object to itself';
@@ -423,6 +429,7 @@ sub _raw {
     my $self = shift;
     $self->{string} = undef;
     foreach my $item (@_) {
+        carp "undefined input" unless(defined($item));
         if (ref($item) and $item->isa(__PACKAGE__)) {
             croak 'Cannot add XML::API objects as raw';
         }
@@ -498,6 +505,13 @@ sub AUTOLOAD {
         $element =~ s/(.+)__(.+)/$2/o;
         return $self->_close($element);
     }
+    elsif ($element =~ s/.*::(.+)_raw$/$1/o) {
+        $element =~ s/(.+)__(.+)/$2/o;
+        $self->{_raw} = 1;
+        $self->_open($element, @_);
+        $self->{_raw} = 0;
+        return $self->_close($element);
+    }
 
     $element =~ s/.*:://o;
     croak 'element not defined' unless($element);
@@ -529,8 +543,8 @@ sub _ast {
             next;
         }
 
-        my $attr;
-        my @contents;
+        my $attr = {};
+        my @contents = ();
 
         if (ref($val) and ref($val) eq 'ARRAY') {
             my @val = @$val;
@@ -554,7 +568,6 @@ sub _ast {
         else {
             push(@contents, $val);
         }
-
         $self->_open($e,$attr);
 
         foreach my $c (@contents) {
@@ -660,6 +673,8 @@ sub _parse_chunk {
         $t =~ s/\&(\w+\;)/__AMP__$1/go;
         # escape '&' in urls
         $t =~ s/\&(\w+=)/__AMP__amp;$1/go;
+        # escape '&' on their own.
+        $t =~ s/(\W)\&(\W)/$1__AMP__amp;$2/go;
         $parser->parse_chunk($t);
     }
 
@@ -905,7 +920,7 @@ XML::API - Perl extension for writing XML
 
 =head1 VERSION
 
-0.23
+0.24
 
 =head1 SYNOPSIS
 
@@ -1150,6 +1165,15 @@ an element then it will be rendered as empty. Ie, $x->br() produces:
 The generic implementation of $x->element. Useful if your element names
 are not suitable as Perl method calls, or are otherwise funny (eg
 starting with '_').
+
+=head2 $x->element_raw('raw content',...)
+
+Adds unescaped content inside an element named 'element'. This is a
+shortcut for the case where you find yourself doing the following:
+
+    $x->element_open();
+    $x->_raw($content);
+    $x->element_close();
 
 =head2 $x->ns__element_open(...)
 
