@@ -221,6 +221,7 @@ $x->_as_string($tfile);
 ok(-f $tfile, 'output file created');
 
 my $text = read_file($tfile, binmode => ':utf8');
+$text =~ s/\r\n/\n/gs;
 is($x, $text, 'output file content matches');
 
 
@@ -229,6 +230,7 @@ $x->_fast_string($tfile);
 ok(-f $tfile, 'fast output file created');
 
 $text = read_file($tfile, binmode => ':utf8');
+$text =~ s/\r\n/\n/gs;
 is($x->_fast_string, $text, 'fast output file content matches');
 
 END {unlink $tfile};
