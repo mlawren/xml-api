@@ -88,11 +88,11 @@ sub as_string {
     my $complex = 0;
 
     foreach my $c (@{$self->{contents}}) {
-        if (UNIVERSAL::isa($c, __PACKAGE__) and !$c->inline) {
+        if ( eval { $c->isa( __PACKAGE__ ) and !$c->inline } ) {
             $complex = 1;
             $str .= "\n" . $c->as_string($indent . $growindent, $growindent);
         }
-        elsif (UNIVERSAL::isa($c, 'XML::API')) { # assume it is complex?
+        elsif ( eval { $c->isa( 'XML::API' ) } ) { # assume it is complex?
             $str .= "\n" . join("\n",
                 map {$_->as_string($indent . $growindent, $growindent)}
                      $c->_elements);
@@ -119,9 +119,9 @@ sub fast_string {
     return  '<'. ($self->{ns} ? $self->{ns}.':' : '') 
            . $self->{element} . $self->attrs_as_string .'>'
            . join('', map {
-                UNIVERSAL::isa($_, __PACKAGE__)
+                eval { $_->isa( __PACKAGE__ ) }
                     ? $_->fast_string
-                    : (UNIVERSAL::isa($_, 'XML::API')
+                    : (eval { $_->isa('XML::API') }
                         ? join('', map {$_->fast_string} $_->_elements)
                         : $_)
                 } @{$self->{contents}})
@@ -196,7 +196,6 @@ use strict;
 use warnings;
 use overload '""' => \&_as_string, 'fallback' => 1;
 use Carp qw(carp croak confess);
-use UNIVERSAL;
 use Scalar::Util qw(weaken refaddr);
 use XML::SAX;
 
@@ -385,7 +384,7 @@ sub _add {
 
     foreach my $item (@_) {
         carp "undefined input" unless(defined($item));
-        if (UNIVERSAL::isa($item, __PACKAGE__)) {
+        if ( eval { $item->isa( __PACKAGE__ ) } ) {
             if (refaddr($item) == refaddr($self)) {
                 croak 'Cannot _add object to itself';
             }
@@ -408,10 +407,10 @@ sub _add {
                 croak 'Cannot use _add with no current element';
             }
 
-            if (UNIVERSAL::isa($item, 'XML::API::Element')) {
+            if ( eval { $item->isa( 'XML::API::Element' ) } ) {
                 $self->{current}->add($item);
             }
-            elsif (UNIVERSAL::isa($item, 'XML::API::Cache')) {
+            elsif ( eval { $item->isa( 'XML::API::Cache' ) } ) {
                 foreach my $lang ($item->langs) {
                     $self->{langs}->{$lang} = 1;
                 }
@@ -430,7 +429,7 @@ sub _raw {
     $self->{string} = undef;
     foreach my $item (@_) {
         carp "undefined input" unless(defined($item));
-        if (ref($item) and $item->isa(__PACKAGE__)) {
+        if (ref($item) and $item->isa( __PACKAGE__ )) {
             croak 'Cannot add XML::API objects as raw';
         }
         if ($self->{current}) {
@@ -818,7 +817,7 @@ sub _goto {
             $self->{current} = undef;
             return;
         }
-        if (UNIVERSAL::isa($id, 'XML::API::Element')) {
+        if ($id->isa( 'XML::API::Element' )) {
             $self->{current} = $id;
         }
         elsif (defined($self->{ids}->{$id})) {
@@ -846,7 +845,7 @@ sub _as_string {
     }
 
     $string .= join("\n", map {
-            UNIVERSAL::isa($_, __PACKAGE__)
+            $_->isa( __PACKAGE__ )
                 ? join("\n", map {$_->as_string} $_->_elements)
                 : $_->as_string('', '  ')
         } @{$self->{elements}});

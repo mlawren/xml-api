@@ -2,7 +2,6 @@ package XML::API::Cache;
 use strict;
 use warnings;
 use Carp qw(croak);
-use UNIVERSAL qw(isa);
 use overload '""' => \&content;
 
 our $VERSION = '0.24';
@@ -11,7 +10,7 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $x     = shift || croak 'XML::API::Cache->new($x)';
-    isa($x, 'XML::API') || croak 'argument must be XML::API derived object';
+    $x->isa('XML::API') || croak 'argument must be XML::API derived object';
 
     my $self  = {
         content => $x->_fast_string,
