@@ -14,5 +14,8 @@ build_requires  'File::Slurp'         => 0;
 
 no_index package => 'XML::API::Element';
 no_index package => 'XML::API::SAXHandler';
+
+resources
+    repository => 'git://github.com/mlawren/xml-api.git';
     
 WriteAll;
