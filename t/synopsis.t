@@ -23,7 +23,7 @@ ok(!$@, 'Eval '.($@ ? $@ : ''));
 
 isa_ok($res, 'XML::API::XHTML');
 
-is($res,'<?xml version="1.0" encoding="UTF-8" ?>
+is("$res",'<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <!-- My - -First- - XML::API document -->
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -61,7 +61,7 @@ ok(!$@, 'Eval '.($@ ? $@ : ''));
 
 isa_ok($res, 'XML::API::RSS');
 
-is($res,'<?xml version="1.0" encoding="UTF-8" ?>
+is("$res",'<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
   <channel>
     <title>Liftoff News</title>

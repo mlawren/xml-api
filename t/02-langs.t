@@ -16,7 +16,7 @@ ok($x->_langs == 1, 'first lang recorded');
 is($x->_lang, 'en', 'current lang en');
 is($x->_dir, undef, 'current dir not defined');
 
-is($x,'<?xml version="1.0" encoding="UTF-8" ?>
+is("$x",'<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"></html>','html ok');
 
@@ -31,7 +31,7 @@ is($x->_lang, 'en', 'current lang back to en');
 is($x->_dir, undef, 'current dir not defined');
 
 
-is($x,'<?xml version="1.0" encoding="UTF-8" ?>
+is("$x",'<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head dir="rtl" xml:lang="de">test head</head>
@@ -56,7 +56,7 @@ $x->two_close;
 is($x->_dir, undef, 'current dir not defined');
 
 ok($x->_langs == 1, 'lang accepted for generic xml');
-is($x,'<?xml version="1.0" encoding="UTF-8" ?>
+is("$x",'<?xml version="1.0" encoding="UTF-8" ?>
 <one>
   <two xml:lang="en">a test two element</two>
 </one>','generic xml ok');

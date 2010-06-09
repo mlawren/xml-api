@@ -16,7 +16,7 @@ $x->_element('_comment','two');
 $x->_close('_ast');
 $x->_close('_open');
 
-is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+is("$x", '<?xml version="1.0" encoding="UTF-8" ?>
 <_open>
   <_ast>
     <_comment>one</_comment>

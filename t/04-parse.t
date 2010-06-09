@@ -41,14 +41,14 @@ isa_ok($x, 'XML::API');
 
 $x->_parse('<div class="divclass"><p>text</p></div>');
 
-is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+is("$x", '<?xml version="1.0" encoding="UTF-8" ?>
 <div class="divclass">
   <p>text</p>
 </div>', 'parse');
 
 $x->_parse_chunk('<one>1</one><two>2</two>');
 
-is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+is("$x", '<?xml version="1.0" encoding="UTF-8" ?>
 <div class="divclass">
   <p>text</p>
 </div>
@@ -58,7 +58,7 @@ is($x, '<?xml version="1.0" encoding="UTF-8" ?>
 
 $x = XML::API->new;
 $x->_parse_chunk('<one>&nbsp;</one>');
-is($x, '<?xml version="1.0" encoding="UTF-8" ?>
+is("$x", '<?xml version="1.0" encoding="UTF-8" ?>
 <one>&nbsp;</one>', 'parse non-xml entity');
 
 memory_cycle_ok($x, 'memory cycle');
