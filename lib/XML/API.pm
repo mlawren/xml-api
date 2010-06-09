@@ -381,6 +381,9 @@ sub _open {
 sub _add {
     my $self = shift;
     $self->{string} = undef;
+    if (!$self->{current}) {
+        croak 'Cannot use _add with no current element';
+    }
 
     foreach my $item (@_) {
         carp "undefined input" unless(defined($item));
@@ -403,10 +406,6 @@ sub _add {
             }
         }
         else {
-            if (!$self->{current}) {
-                croak 'Cannot use _add with no current element';
-            }
-
             if ( eval { $item->isa( 'XML::API::Element' ) } ) {
                 $self->{current}->add($item);
             }
@@ -1095,14 +1094,14 @@ element names are not suitable as Perl method calls, or are otherwise funny
 =head2 $x->_add($content)
 
 Add $content to the 'current' element. If there is no current element
-then this method will carp.
+then this method will croak.
 
 If $content is a scalar (ie plain text or numbers) then the characters
 '<&">' will be XML-escaped.  If $content is another XML::API object the
 elements of that object will be added to content tree.
 
-This method will also carp if you attempt to add $x to itself or if $x is
-an empty XML::API object.
+This method will also croak if you attempt to add $x to itself or if $x
+is an empty XML::API object.
 
 =head2 $x->_raw($content)
 

@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 35;
+use Test::More tests => 34;
 use Test::Exception;
 use Test::Memory::Cycle;
 use File::Slurp;
@@ -265,12 +265,12 @@ $ns->ns1__Body_open('my body');
 $ns->Body_close();
 $ns->_ns(undef);
 $ns->password('-xsi:type' => 'xsd:string');
+
+throws_ok {
+    $ns->_add($ns);
+} qr/^Cannot _add object to itself/;
+
 $ns->Envelope_close();
-
-
-#
-# Adding XML objects to themselves.
-#
 
 is("$ns",'<?xml version="1.0" encoding="UTF-8" ?>
 <soapenv:Envelope>
@@ -278,35 +278,36 @@ is("$ns",'<?xml version="1.0" encoding="UTF-8" ?>
   <password xsi:type="xsd:string" />
 </soapenv:Envelope>', 'NameSpace support');
 
-$ns->_set_lang('en');
 
 my $noelements = XML::API->new();
+throws_ok {
+    $ns->_add($noelements);
+} qr/^Cannot use _add with no current element/;
+
+$ns->final_open('');
+$ns->_set_lang('en');
+$noelements->think('deep');
 $ns->_add($noelements);
 
-memory_cycle_ok($noelements, 'memory cycle');
-memory_cycle_ok($ns, 'memory cycle');
-
-is("$ns",'<?xml version="1.0" encoding="UTF-8" ?>
-<soapenv:Envelope>
-  <ns1:Body>my body</ns1:Body>
-  <password xsi:type="xsd:string" />
-</soapenv:Envelope>
-', 'No elements');
+#is("$ns",'<?xml version="1.0" encoding="UTF-8" ?>
+#<soapenv:Envelope>
+#  <ns1:Body>my body</ns1:Body>
+#  <password xsi:type="xsd:string" />
+#</soapenv:Envelope>', 'No elements');
 
 is($noelements->_lang, 'en', 'language up the tree');
 
-$noelements->think('deep');
 is("$noelements",'<?xml version="1.0" encoding="UTF-8" ?>
 <think>deep</think>', 'no elements with element');
-
-memory_cycle_ok($noelements, 'memory cycle');
-memory_cycle_ok($ns, 'memory cycle');
 
 is("$ns",'<?xml version="1.0" encoding="UTF-8" ?>
 <soapenv:Envelope>
   <ns1:Body>my body</ns1:Body>
   <password xsi:type="xsd:string" />
 </soapenv:Envelope>
-<think>deep</think>', 'ns plus think');
+<final>
+  <think>deep</think></final>', 'ns plus think');
 
+memory_cycle_ok($noelements, 'memory cycle');
+memory_cycle_ok($ns, 'memory cycle');
 
