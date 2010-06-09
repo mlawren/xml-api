@@ -16,6 +16,7 @@ no_index package => 'XML::API::Element';
 no_index package => 'XML::API::SAXHandler';
 
 resources
+    bugtracker => 'http://rt.cpan.org/NoAuth/ReportBug.html?Queue=XML-API',
     repository => 'git://github.com/mlawren/xml-api.git';
     
 WriteAll;
