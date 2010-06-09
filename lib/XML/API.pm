@@ -1437,7 +1437,7 @@ A small request: if you use this module I would appreciate hearing about it.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2004-2007 Mark Lawrence <nomad@null.net>
+Copyright (C) 2004-2010 Mark Lawrence <nomad@null.net>
 
 =head1 LICENSE
 
