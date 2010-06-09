@@ -5,7 +5,7 @@ use warnings;
 use Carp qw(croak);
 use Scalar::Util qw(weaken refaddr);
 
-our $VERSION = '0.24';
+our $VERSION = '0.25';
 
 sub new {
     my $proto = shift;
@@ -199,7 +199,7 @@ use Carp qw(carp croak confess);
 use Scalar::Util qw(weaken refaddr);
 use XML::SAX;
 
-our $VERSION          = '0.24';
+our $VERSION          = '0.25';
 our $DEFAULT_ENCODING = 'UTF-8';
 our $ENCODING         = undef;
 our $Indent           = '  ';

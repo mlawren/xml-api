@@ -13,7 +13,7 @@ use strict;
 use warnings;
 use base qw(XML::API);
 
-our $VERSION = '0.24';
+our $VERSION = '0.25';
 
 use constant DOCTYPE => qq{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">};
 
