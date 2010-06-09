@@ -15,6 +15,4 @@ build_requires  'File::Slurp'         => 0;
 no_index package => 'XML::API::Element';
 no_index package => 'XML::API::SAXHandler';
     
-auto_install;
-
 WriteAll;
