@@ -891,12 +891,13 @@ sub _fast_string {
 sub _escapeXML {
     my $data = $_[0];
     return '' unless(defined($data));
-    if ($data =~ /[\&\<\>\"(__AMP__)]/o) {
+    if ($data =~ /[\&\<\>\"(__AMP__)\']/o) {
         $data =~ s/\&(?!\w+\;)/\&amp\;/go;
         $data =~ s/\</\&lt\;/go;
         $data =~ s/\>/\&gt\;/go;
         $data =~ s/\"/\&quot\;/go;
         $data =~ s/__AMP__/\&/go;
+        $data =~ s/\'/\&apos\;/go;
     }
     return $data;
 }

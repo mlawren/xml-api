@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 9;
+use Test::More tests => 10;
 use Test::Exception;
 use Test::Memory::Cycle;
 
@@ -63,4 +63,8 @@ is("$x", '<?xml version="1.0" encoding="UTF-8" ?>
 
 memory_cycle_ok($x, 'memory cycle');
 
-
+is(XML::API::_escapeXML(
+    " ' "
+),
+    " &apos; ",
+'escape apostrophe/single quote');
