@@ -1,5 +1,4 @@
 Changes
-Changes.old
 example/xml-api.cgi
 inc/Module/Install.pm
 inc/Module/Install/Base.pm
@@ -13,16 +12,15 @@ lib/XML/API.pm
 lib/XML/API/Cache.pm
 lib/XML/API/RSS.pm
 lib/XML/API/XHTML.pm
-Makefile.old
 Makefile.PL
 MANIFEST
-MANIFEST.SKIP
 META.yml			Module meta-data (added by MakeMaker)
 README
 t/01-Element.t
 t/02-langs.t
 t/03-XML-API.t
 t/04-parse.t
+t/attributes.t
 t/benchmark.pl
 t/cache.t
 t/hyphens.t
@@ -30,4 +28,3 @@ t/oddball.t
 t/pod-coverage.t
 t/pod.t
 t/synopsis.t
-TODO
