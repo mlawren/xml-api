@@ -14,7 +14,7 @@ use warnings;
 use 5.006;
 use base qw(XML::API);
 
-our $VERSION = '0.26_1';
+our $VERSION = '0.26_2';
 
 my $xsd = {};
 
@@ -50,7 +50,7 @@ XML::API::RSS - RSS feed generation through an object API
 
 =head1 VERSION
 
-0.26_1 (yyyy-mm-dd)
+0.26_2 (yyyy-mm-dd)
 
 =head1 SYNOPSIS
 
