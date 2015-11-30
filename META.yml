@@ -34,4 +34,4 @@ resources:
   bugtracker: http://rt.cpan.org/NoAuth/ReportBug.html?Queue=XML-API
   license: http://opensource.org/licenses/gpl-license.php
   repository: git://github.com/mlawren/xml-api.git
-version: 0.26_1
+version: '0.28'

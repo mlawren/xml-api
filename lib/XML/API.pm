@@ -5,7 +5,7 @@ use warnings;
 use Carp qw(croak);
 use Scalar::Util qw(weaken refaddr);
 
-our $VERSION = '0.26_1';
+our $VERSION = '0.28';
 
 sub new {
     my $proto = shift;
@@ -199,7 +199,7 @@ use Carp qw(carp croak confess);
 use Scalar::Util qw(weaken refaddr);
 use XML::SAX;
 
-our $VERSION          = '0.26_1';
+our $VERSION          = '0.28';
 our $DEFAULT_ENCODING = 'UTF-8';
 our $ENCODING         = undef;
 our $Indent           = '  ';
@@ -919,7 +919,7 @@ XML::API - Perl extension for writing XML
 
 =head1 VERSION
 
-0.26_1 (2015-11-29)
+0.28 (2015-11-30)
 
 =head1 SYNOPSIS
 

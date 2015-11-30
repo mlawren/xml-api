@@ -1,20 +1,10 @@
 package XML::API::RSS;
-# ----------------------------------------------------------------------
-# Copyright (C) 2004 Mark Lawrence <nomad@null.net>
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# ----------------------------------------------------------------------
-# Derivative of XML::API for RSS 
-# ----------------------------------------------------------------------
 use strict;
 use warnings;
 use 5.006;
 use base qw(XML::API);
 
-our $VERSION = '0.26_1';
+our $VERSION = '0.28';
 
 my $xsd = {};
 
@@ -50,7 +40,7 @@ XML::API::RSS - RSS feed generation through an object API
 
 =head1 VERSION
 
-0.26_1 (2015-11-29)
+0.28 (2015-11-30)
 
 =head1 SYNOPSIS
 
@@ -100,7 +90,7 @@ Mark Lawrence E<lt>nomad@null.net<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004-2008 Mark Lawrence <nomad@null.net>
+Copyright (C) 2004-2008,2015 Mark Lawrence <nomad@null.net>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
