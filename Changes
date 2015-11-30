@@ -1,33 +1,18 @@
 0.26_2 (yyyy-mm-dd)
 
-    API / Behaviour Changes:
-        - None.
-
-    New Features:
-        - None.
-
     Enhancements:
-        - None.
-
-    Bug Fixes:
-        - None.
-
-    Dependencies:
-        - None.
+        - Minor update of distribution files
 
 0.26_1 (2015-11-29)
 
-    API / Behaviour Changes:
-        - None.
-
-    New Features:
-        - None.
+    First release in 5 years!
 
     Enhancements:
-        - None.
+        - Add test for _attrs() method (Joenio Costa)
 
     Bug Fixes:
-        - None.
+        - Escape apostrophies (Joenio Costa)
 
-    Dependencies:
-        - None.
+0.25 (2010-06-09)
+
+    Un-recorded. Previous history is in Git and Darcs.
