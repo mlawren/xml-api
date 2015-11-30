@@ -2,6 +2,8 @@
 
     Enhancements:
         - Minor update of distribution files
+        - Release numbering change: odd numbers are for development,
+          even numbers are full releases.
 
 0.26_1 (2015-11-29)
 
