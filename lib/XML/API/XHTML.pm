@@ -46,7 +46,7 @@ XML::API::XHTML - XHTML generation through an object API
 
 =head1 VERSION
 
-0.28 (yyyy-mm-dd)
+0.28 (2015-11-30)
 
 =head1 SYNOPSIS
 
