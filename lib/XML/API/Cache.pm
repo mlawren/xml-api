@@ -93,7 +93,7 @@ Mark Lawrence E<lt>nomad@null.net<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2008 Mark Lawrence <nomad@null.net>
+Copyright (C) 2008,2015 Mark Lawrence <nomad@null.net>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
