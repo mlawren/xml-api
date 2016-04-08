@@ -12,18 +12,18 @@ sub new {
     my $x     = shift || croak 'XML::API::Cache->new($x)';
     $x->isa('XML::API') || croak 'argument must be XML::API derived object';
 
-    my $self  = {
+    my $self = {
         content => $x->_fast_string,
-        langs   => [$x->_langs],
+        langs   => [ $x->_langs ],
     };
 
-    bless($self,$class);
+    bless( $self, $class );
     return $self;
 }
 
 sub langs {
     my $self = shift;
-    return @{$self->{langs}};
+    return @{ $self->{langs} };
 }
 
 sub content {

@@ -5,17 +5,18 @@ use base qw(XML::API);
 
 our $VERSION = '0.29_1';
 
-use constant DOCTYPE => qq{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">};
+use constant DOCTYPE =>
+qq{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">};
 
-use constant XSD => {};
+use constant XSD          => {};
 use constant ROOT_ELEMENT => 'html';
-use constant ROOT_ATTRS => {xmlns => 'http://www.w3.org/1999/xhtml'};
-
+use constant ROOT_ATTRS   => { xmlns => 'http://www.w3.org/1999/xhtml' };
 
 my $xsd = {};
 
 sub _doctype {
-    return q{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">};
+    return
+q{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">};
 }
 
 sub _xsd {
@@ -27,13 +28,12 @@ sub _root_element {
 }
 
 sub _root_attrs {
-    return {xmlns => 'http://www.w3.org/1999/xhtml'};
+    return { xmlns => 'http://www.w3.org/1999/xhtml' };
 }
 
 sub _content_type {
     return 'application/xhtml+xml';
 }
-
 
 1;
 

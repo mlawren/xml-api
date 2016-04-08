@@ -21,13 +21,12 @@ sub _root_element {
 }
 
 sub _root_attrs {
-    return {version => '2.0'};
+    return { version => '2.0' };
 }
 
 sub _content_type {
     return 'application/rss+xml';
 }
-
 
 1;
 

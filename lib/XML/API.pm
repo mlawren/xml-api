@@ -10,111 +10,111 @@ our $VERSION = '0.29_1';
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-    my $self = {
-        attrs     => {},
-        contents  => [],
+    my $self  = {
+        attrs    => {},
+        contents => [],
         @_
     };
 
-
-    if ($self->{comment}) {
+    if ( $self->{comment} ) {
         $self->{comment} =~ s/--/- -/go;
     }
 
-    weaken($self->{parent}) if (exists $self->{parent});
+    weaken( $self->{parent} ) if ( exists $self->{parent} );
 
-    bless ($self, $class);
+    bless( $self, $class );
     return $self;
 }
-
-
 
 sub parent {
     my $self = shift;
     return $self->{parent};
 }
 
-
 sub inline {
     my $self = shift;
     return $self->{inline};
 }
 
-
 sub attrs_as_string {
     my $self = shift;
     my @strings;
 
-    foreach my $key (sort keys %{$self->{attrs}}) {
+    foreach my $key ( sort keys %{ $self->{attrs} } ) {
         my $val = $self->{attrs}->{$key};
-        if (!defined($val)) {
+        if ( !defined($val) ) {
             warn "Attribute '$key' (element '$self->{element}') is undefined";
             $val = '*undef*';
         }
-        push(@strings, $key .'="'. $val .'"');
+        push( @strings, $key . '="' . $val . '"' );
     }
 
-    return '' unless(@strings);
-    return ' ' . join(' ', @strings);
+    return '' unless (@strings);
+    return ' ' . join( ' ', @strings );
 }
-
 
 sub add {
     my $self = shift;
-    push(@{$self->{contents}}, @_);
+    push( @{ $self->{contents} }, @_ );
 }
-
 
 sub as_string {
     my $self       = shift;
     my $indent     = shift || '';
     my $growindent = shift || '';
 
-    if ($self->{comment}) {
-        return $indent . '<!-- '. $self->{comment} .' -->';
+    if ( $self->{comment} ) {
+        return $indent . '<!-- ' . $self->{comment} . ' -->';
     }
 
-    if ($self->{cdata}) {
-        return $indent . '<![CDATA['. $self->{cdata} . ']]>';
+    if ( $self->{cdata} ) {
+        return $indent . '<![CDATA[' . $self->{cdata} . ']]>';
     }
 
-    if (!@{$self->{contents}}) {
-        return $indent . '<'. ($self->{ns} ? $self->{ns}.':' : '')
-               .  $self->{element} . $self->attrs_as_string . ' />';
+    if ( !@{ $self->{contents} } ) {
+        return
+            $indent . '<'
+          . ( $self->{ns} ? $self->{ns} . ':' : '' )
+          . $self->{element}
+          . $self->attrs_as_string . ' />';
     }
 
-    my $str = $indent . '<'. ($self->{ns} ? $self->{ns}.':' : '')
-              . $self->{element} . $self->attrs_as_string .'>';
+    my $str =
+        $indent . '<'
+      . ( $self->{ns} ? $self->{ns} . ':' : '' )
+      . $self->{element}
+      . $self->attrs_as_string . '>';
     my $complex = 0;
 
-    foreach my $c (@{$self->{contents}}) {
-        if ( eval { $c->isa( __PACKAGE__ ) and !$c->inline } ) {
+    foreach my $c ( @{ $self->{contents} } ) {
+        if ( eval { $c->isa(__PACKAGE__) and !$c->inline } ) {
             $complex = 1;
-            $str .= "\n" . $c->as_string($indent . $growindent, $growindent);
+            $str .= "\n" . $c->as_string( $indent . $growindent, $growindent );
         }
-        elsif ( eval { $c->isa( 'XML::API' ) } ) { # assume it is complex?
-            $str .= "\n" . join("\n",
-                map {$_->as_string($indent . $growindent, $growindent)}
-                     $c->_elements);
+        elsif ( eval { $c->isa('XML::API') } ) {    # assume it is complex?
+            $str .= "\n"
+              . join( "\n",
+                map { $_->as_string( $indent . $growindent, $growindent ) }
+                  $c->_elements );
         }
         else {
-            $str .= $c if (defined($c));
+            $str .= $c if ( defined($c) );
         }
     }
 
     if ($complex) {
         $str .= "\n" . $indent;
     }
-    $str .=  '</'. ($self->{ns} ? $self->{ns}.':' : '') . $self->{element} .'>';
+    $str .=
+      '</' . ( $self->{ns} ? $self->{ns} . ':' : '' ) . $self->{element} . '>';
     return $str;
 }
 
-
 sub fast_string {
-    my $self       = shift;
+    my $self = shift;
 
     $self->{comment} && return '';
-    $self->{cdata}   && return '<![CDATA['. $self->{cdata} . ']]>';
+    $self->{cdata}   && return '<![CDATA[' . $self->{cdata} . ']]>';
 
     return
         '<'
@@ -123,19 +123,26 @@ sub fast_string {
       . $self->attrs_as_string . ' />'
       unless @{ $self->{contents} };
 
-    return  '<'. ($self->{ns} ? $self->{ns}.':' : '') 
-           . $self->{element} . $self->attrs_as_string .'>'
-           . join('', map {
-                eval { $_->isa( __PACKAGE__ ) }
-                    ? $_->fast_string
-                    : (eval { $_->isa('XML::API') }
-                        ? join('', map {$_->fast_string} $_->_elements)
-                        : $_)
-                } @{$self->{contents}})
-           . '</'. ($self->{ns} ? $self->{ns}.':' : '') . $self->{element}
-           . '>';
+    return
+        '<'
+      . ( $self->{ns} ? $self->{ns} . ':' : '' )
+      . $self->{element}
+      . $self->attrs_as_string . '>'
+      . join(
+        '',
+        map {
+            eval { $_->isa(__PACKAGE__) } ? $_->fast_string
+              : (
+                eval { $_->isa('XML::API') }
+                ? join( '', map { $_->fast_string } $_->_elements )
+                : $_
+              )
+        } @{ $self->{contents} }
+      )
+      . '</'
+      . ( $self->{ns} ? $self->{ns} . ':' : '' )
+      . $self->{element} . '>';
 }
-
 
 # Private package (not to be used outside XML::API)
 package XML::API::SAXHandler;
@@ -146,54 +153,50 @@ use base qw(XML::SAX::Base);
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-    my $self = {
+    my $self  = {
         xmlapi => undef,
         @_,
     };
-    bless($self, $class);
+    bless( $self, $class );
     return $self;
 }
-
 
 sub start_element {
     my $self = shift;
     my $hash = shift;
-    if($hash->{Name} eq '_xml_api_ignore') {
+    if ( $hash->{Name} eq '_xml_api_ignore' ) {
         $self->{xml_api_ignore} = 1;
         return;
     }
     $self->{xml_api_ignore} = 0;
 
     my $attrs = {};
-    foreach my $val (values %{$hash->{Attributes}}) {
-        $attrs->{$val->{Name}} = $val->{Value};
+    foreach my $val ( values %{ $hash->{Attributes} } ) {
+        $attrs->{ $val->{Name} } = $val->{Value};
     }
 
-    $self->{xmlapi}->_open($hash->{Name}, $attrs);
+    $self->{xmlapi}->_open( $hash->{Name}, $attrs );
     return;
 }
-
 
 sub characters {
     my $self = shift;
     my $hash = shift;
     $self->{xml_api_ignore} && return;
-    $self->{xmlapi}->_add($hash->{Data});
+    $self->{xmlapi}->_add( $hash->{Data} );
     return;
 }
-
 
 sub end_element {
     my $self = shift;
     my $hash = shift;
-    if($hash->{Name} eq '_xml_api_ignore') {
+    if ( $hash->{Name} eq '_xml_api_ignore' ) {
         return;
     }
 
-    $self->{xmlapi}->_close($hash->{Name});
+    $self->{xmlapi}->_close( $hash->{Name} );
     return;
 }
-
 
 # ----------------------------------------------------------------------
 # XML::API - Perl extension for creating XML documents
@@ -212,7 +215,6 @@ our $ENCODING         = undef;
 our $Indent           = '  ';
 our $AUTOLOAD;
 
-
 # Not implemented yet:
 #  strict   => 0|1                # Optional, defaults to 0
 #By default strict checking is performed to make sure that the structure
@@ -224,28 +226,28 @@ sub new {
     my $class = ref($proto) || $proto;
 
     my $self = {
-        doctype   => undef,
-        encoding  => undef,
-        debug     => undef,
+        doctype  => undef,
+        encoding => undef,
+        debug    => undef,
         @_,
     };
 
     #
     # Derived classes
     #
-    if ($class ne __PACKAGE__) {
-        if ($self->{doctype}) {
+    if ( $class ne __PACKAGE__ ) {
+        if ( $self->{doctype} ) {
             confess("Must not specify doctype when instantiating $class");
         }
     }
-    elsif ($self->{doctype}) {
-        $class = $class . '::' . uc($self->{doctype});
-        if (! eval "require $class;1;") {
+    elsif ( $self->{doctype} ) {
+        $class = $class . '::' . uc( $self->{doctype} );
+        if ( !eval "require $class;1;" ) {
             die "Could not load module '$class'";
         }
     }
     delete $self->{doctype};
-    bless ($self, $class);
+    bless( $self, $class );
 
     $self->{encoding} = $self->{encoding} || $ENCODING || $DEFAULT_ENCODING;
     $self->{elements} = [];
@@ -257,30 +259,25 @@ sub new {
     return $self;
 }
 
-
 sub _root_element {
     return '';
 }
-
 
 sub _root_attrs {
     return {};
 }
 
-
 sub _doctype {
     return '';
 }
 
-
 sub _elements {
     my $self = shift;
-    return @{$self->{elements}};
+    return @{ $self->{elements} };
 }
 
-
 sub _open {
-    my $self    = shift;
+    my $self = shift;
     my $element = shift || croak '_open($element,...)';
 
     my $namespace = $self->{namespace};
@@ -288,7 +285,7 @@ sub _open {
     # reset the output string in case it has been cached
     $self->{string} = undef;
 
-    if ($element eq $self->_root_element) {
+    if ( $element eq $self->_root_element ) {
         $self->{has_root_element} = 1;
     }
 
@@ -298,34 +295,34 @@ sub _open {
     my $total = scalar(@_) - 1;
     my $next;
 
-    foreach my $i (0..$total) {
+    foreach my $i ( 0 .. $total ) {
         if ($next) {
             $next = undef;
             next;
         }
 
-        my $arg  = $_[$i];
-        if (ref($arg) eq 'HASH') {
-            while (my ($key,$val) = each %$arg) {
+        my $arg = $_[$i];
+        if ( ref($arg) eq 'HASH' ) {
+            while ( my ( $key, $val ) = each %$arg ) {
                 $attrs->{$key} = _escapeXML($val);
-                if (!defined($val)) {
+                if ( !defined($val) ) {
                     carp "attribute '$key' undefined (element '$element')";
-                    $attrs->{$key} = ''
+                    $attrs->{$key} = '';
                 }
             }
         }
-        elsif (defined($arg) and $arg =~ m/^-[^0-9\.]+/o) {
+        elsif ( defined($arg) and $arg =~ m/^-[^0-9\.]+/o ) {
             $arg =~ s/^-//o;
-            $attrs->{$arg} = _escapeXML($_[++$i]);
-            if (!defined($attrs->{$arg})) {
+            $attrs->{$arg} = _escapeXML( $_[ ++$i ] );
+            if ( !defined( $attrs->{$arg} ) ) {
                 carp "attribute '$arg' undefined (element '$element') ";
-                $attrs->{$arg} = ''
+                $attrs->{$arg} = '';
             }
             $next = 1;
             next;
         }
         else {
-            push(@content, $arg);
+            push( @content, $arg );
         }
     }
 
@@ -333,44 +330,44 @@ sub _open {
     # Start with the default root element attributes and add those
     # given if this is the root element
     #
-    if ($element eq $self->_root_element) {
+    if ( $element eq $self->_root_element ) {
         my $rootattrs = $self->_root_attrs;
-        while (my ($key,$val) = each %$attrs) {
+        while ( my ( $key, $val ) = each %$attrs ) {
             $rootattrs->{$key} = $val;
         }
         $attrs = $rootattrs;
     }
 
-    my ($file,$line) = (caller)[1,2] if($self->{debug});
+    my ( $file, $line ) = (caller)[ 1, 2 ] if ( $self->{debug} );
 
-    if ($self->{langnext}) {
+    if ( $self->{langnext} ) {
         $attrs->{'xml:lang'} = delete $self->{langnext};
     }
-    if ($self->{dirnext}) {
+    if ( $self->{dirnext} ) {
         $attrs->{'dir'} = delete $self->{dirnext};
     }
 
     my $e;
-    if ($self->{current}) {
+    if ( $self->{current} ) {
         $e = XML::API::Element->new(
-            element  => $element,
-            attrs    => $attrs,
-            ns       => $namespace,
-            parent   => $self->{current},
+            element => $element,
+            attrs   => $attrs,
+            ns      => $namespace,
+            parent  => $self->{current},
         );
         $self->_add($e);
     }
     else {
         $e = XML::API::Element->new(
-            element  => $element,
-            attrs    => $attrs,
-            ns       => $namespace,
+            element => $element,
+            attrs   => $attrs,
+            ns      => $namespace,
         );
-        push(@{$self->{elements}}, $e);
+        push( @{ $self->{elements} }, $e );
     }
 
     $self->{current} = $e;
-    if ($self->{_raw}) {
+    if ( $self->{_raw} ) {
         $self->_raw(@content);
     }
     else {
@@ -378,209 +375,206 @@ sub _open {
     }
 
     $self->_comment("DEBUG: '$element' (open) at $file:$line")
-        if($self->{debug});
+      if ( $self->{debug} );
 
     return $e;
 }
 
-
-
 sub _add {
     my $self = shift;
     $self->{string} = undef;
-    if (!$self->{current}) {
+    if ( !$self->{current} ) {
         croak 'Cannot use _add with no current element';
     }
 
     foreach my $item (@_) {
-        carp "undefined input" unless(defined($item));
-        if ( eval { $item->isa( __PACKAGE__ ) } ) {
-            if (refaddr($item) == refaddr($self)) {
+        carp "undefined input" unless ( defined($item) );
+        if ( eval { $item->isa(__PACKAGE__) } ) {
+            if ( refaddr($item) == refaddr($self) ) {
                 croak 'Cannot _add object to itself';
             }
-            if (!$self->{current}) {
-                push(@{$self->{elements}}, $item);
+            if ( !$self->{current} ) {
+                push( @{ $self->{elements} }, $item );
             }
             else {
                 $self->{current}->add($item);
             }
-            bless($item, ref($self));
+            bless( $item, ref($self) );
             $item->{parent} = $self;
-            weaken($item->{parent});
+            weaken( $item->{parent} );
 
-            foreach my $lang (keys %{$item->{langs}}) {
+            foreach my $lang ( keys %{ $item->{langs} } ) {
                 $self->{langs}->{$lang} = 1;
             }
         }
         else {
-            if ( eval { $item->isa( 'XML::API::Element' ) } ) {
+            if ( eval { $item->isa('XML::API::Element') } ) {
                 $self->{current}->add($item);
             }
-            elsif ( eval { $item->isa( 'XML::API::Cache' ) } ) {
-                foreach my $lang ($item->langs) {
+            elsif ( eval { $item->isa('XML::API::Cache') } ) {
+                foreach my $lang ( $item->langs ) {
                     $self->{langs}->{$lang} = 1;
                 }
                 $self->{current}->add($item);
             }
             else {
-                $self->{current}->add(_escapeXML($item));
+                $self->{current}->add( _escapeXML($item) );
             }
         }
     }
 }
 
-
 sub _raw {
     my $self = shift;
     $self->{string} = undef;
     foreach my $item (@_) {
-        carp "undefined input" unless(defined($item));
-        if (ref($item) and $item->isa( __PACKAGE__ )) {
+        carp "undefined input" unless ( defined($item) );
+        if ( ref($item) and $item->isa(__PACKAGE__) ) {
             croak 'Cannot add XML::API objects as raw';
         }
-        if ($self->{current}) {
+        if ( $self->{current} ) {
             $self->{current}->add($item);
         }
         else {
-            push(@{$self->{elements}}, $item);
+            push( @{ $self->{elements} }, $item );
         }
     }
 }
-
 
 sub _close {
     my $self = shift;
     my $element = shift || croak '_close($element)';
 
-    my ($file,$line) = (caller)[1,2] if($self->{debug});
+    my ( $file, $line ) = (caller)[ 1, 2 ] if ( $self->{debug} );
 
-    if (!$self->{current}) {
+    if ( !$self->{current} ) {
         carp 'attempt to close non-existent element "' . $element . '"';
         return;
     }
 
-    if ($element eq $self->{current}->{element}) {
-        if ($self->{current}->parent) {
+    if ( $element eq $self->{current}->{element} ) {
+        if ( $self->{current}->parent ) {
             $self->{current} = $self->{current}->parent;
-            $self->_comment("DEBUG: '$element' close at $file:$line") if($self->{debug});
+            $self->_comment("DEBUG: '$element' close at $file:$line")
+              if ( $self->{debug} );
         }
         else {
             $self->{current} = undef;
         }
     }
     else {
-        carp 'attempted to close element "' . $element . '" when current ' .
-             'element is "' . $self->{current}->{element} . '"';
+        carp 'attempted to close element "'
+          . $element
+          . '" when current '
+          . 'element is "'
+          . $self->{current}->{element} . '"';
     }
     return;
 }
 
-
 sub _element {
-    my $self = shift;
+    my $self    = shift;
     my $element = shift || croak '_element($element)';
-    my $e = $self->_open($element,@_);
+    my $e       = $self->_open( $element, @_ );
     $self->_close($element);
     return $e;
 }
-
 
 #
 # The implementation for element, element_open and element_close
 #
 
 sub AUTOLOAD {
-    my $self = shift;
+    my $self    = shift;
     my $element = $AUTOLOAD;
 
-    my ($open, $close) = (0,0);
+    my ( $open, $close ) = ( 0, 0 );
 
-    if ($element =~ s/.*::(.+)_open$/$1/o) {
+    if ( $element =~ s/.*::(.+)_open$/$1/o ) {
         my $old_ns = $self->{namespace};
 
-        if ($element =~ s/(.+)__(.+)/$2/o) {
+        if ( $element =~ s/(.+)__(.+)/$2/o ) {
             $self->{namespace} = $1;
         }
 
-        my $e = $self->_open($element, @_);
+        my $e = $self->_open( $element, @_ );
         $self->{namespace} = $old_ns;
         return $e;
     }
-    elsif ($element =~ s/.*::(.+)_close$/$1/o) {
+    elsif ( $element =~ s/.*::(.+)_close$/$1/o ) {
         $element =~ s/(.+)__(.+)/$2/o;
         return $self->_close($element);
     }
-    elsif ($element =~ s/.*::(.+)_raw$/$1/o) {
+    elsif ( $element =~ s/.*::(.+)_raw$/$1/o ) {
         $element =~ s/(.+)__(.+)/$2/o;
         $self->{_raw} = 1;
-        $self->_open($element, @_);
+        $self->_open( $element, @_ );
         $self->{_raw} = 0;
         return $self->_close($element);
     }
 
     $element =~ s/.*:://o;
-    croak 'element not defined' unless($element);
+    croak 'element not defined' unless ($element);
 
-    if ($element =~ /^_/o) {
+    if ( $element =~ /^_/o ) {
         croak 'Undefined subroutine &' . ref($self) . "::$element called";
     }
 
     my $old_ns = $self->{namespace};
 
-    if ($element =~ s/(.+)__(.+)/$2/o) {
+    if ( $element =~ s/(.+)__(.+)/$2/o ) {
         $self->{namespace} = $1;
     }
-    my $e = $self->_open($element, @_);
+    my $e = $self->_open( $element, @_ );
     $self->{namespace} = $old_ns;
     $self->_close($element);
     return $e;
 }
 
-
 sub _ast {
     my $self = shift;
 
-    foreach my $i (1 .. int(scalar(@_) / 2)) {
-        my ($e,$val) = splice(@_,0,2);
+    foreach my $i ( 1 .. int( scalar(@_) / 2 ) ) {
+        my ( $e, $val ) = splice( @_, 0, 2 );
 
-        if (!ref($val)) {
-            $self->_element($e,$val);
+        if ( !ref($val) ) {
+            $self->_element( $e, $val );
             next;
         }
 
-        my $attr = {};
+        my $attr     = {};
         my @contents = ();
 
-        if (ref($val) and ref($val) eq 'ARRAY') {
+        if ( ref($val) and ref($val) eq 'ARRAY' ) {
             my @val = @$val;
 
-            foreach my $i (1 .. int(scalar(@val) / 2)) {
-                my ($arg,$arg2) = splice(@val,0,2);
+            foreach my $i ( 1 .. int( scalar(@val) / 2 ) ) {
+                my ( $arg, $arg2 ) = splice( @val, 0, 2 );
 
-                if ($arg =~ s/^-(.+)/$1/o) {
+                if ( $arg =~ s/^-(.+)/$1/o ) {
                     $attr->{$arg} = $arg2;
                 }
-                elsif (ref($arg2) and ref($arg2) eq 'ARRAY') {
-                    push(@contents, [$arg, $arg2]);
+                elsif ( ref($arg2) and ref($arg2) eq 'ARRAY' ) {
+                    push( @contents, [ $arg, $arg2 ] );
                 }
                 else {
-                    push(@contents, {$arg => $arg2});
+                    push( @contents, { $arg => $arg2 } );
                 }
             }
 
-            push(@contents, @val) if(@val);
+            push( @contents, @val ) if (@val);
         }
         else {
-            push(@contents, $val);
+            push( @contents, $val );
         }
-        $self->_open($e,$attr);
+        $self->_open( $e, $attr );
 
         foreach my $c (@contents) {
-            if (ref($c) and ref($c) eq 'ARRAY') {
+            if ( ref($c) and ref($c) eq 'ARRAY' ) {
                 $self->_ast(@$c);
             }
-            elsif (ref($c) and ref($c) eq 'HASH') {
-                my ($k,$v) = each %$c;
+            elsif ( ref($c) and ref($c) eq 'HASH' ) {
+                my ( $k, $v ) = each %$c;
                 $self->_open($k);
                 $self->_add($v);
                 $self->_close($k);
@@ -596,88 +590,89 @@ sub _ast {
     return;
 }
 
-
 sub _comment {
     my $self = shift;
+
     # FIXME: should escape?
-    $self->_raw(XML::API::Element->new(comment => join('',@_)));
+    $self->_raw( XML::API::Element->new( comment => join( '', @_ ) ) );
     return;
 }
-
 
 sub _cdata {
     my $self = shift;
-    $self->_raw(XML::API::Element->new(cdata => join('',@_)));
+    $self->_raw( XML::API::Element->new( cdata => join( '', @_ ) ) );
     return;
 }
-
 
 sub _css {
-    my $self = shift;
+    my $self    = shift;
     my $content = shift;
-    if ($content =~ /\n/s) {
-        $self->_raw('/*<![CDATA[*/'."\n". $content .'/*]]>*/');
+    if ( $content =~ /\n/s ) {
+        $self->_raw( '/*<![CDATA[*/' . "\n" . $content . '/*]]>*/' );
     }
     else {
-        $self->_raw('/*<![CDATA[*/ '. $content .' /*]]>*/');
+        $self->_raw( '/*<![CDATA[*/ ' . $content . ' /*]]>*/' );
     }
     return;
 }
-
 
 sub _javascript {
     my $self = shift;
-    $self->script_open(-type => 'text/javascript');
-    $self->_raw('// -------- JavaScript Begin -------- <![CDATA['."\n");
+    $self->script_open( -type => 'text/javascript' );
+    $self->_raw( '// -------- JavaScript Begin -------- <![CDATA[' . "\n" );
     $self->_raw(@_);
     $self->_raw('// --------- JavaScript End --------- ]]>');
     $self->script_close;
     return;
 }
 
-
 sub _parse {
-    my $self = shift;
+    my $self    = shift;
     my $current = $self->{current};
 
     foreach (@_) {
-        next unless(defined($_) and $_ ne '');
+        next unless ( defined($_) and $_ ne '' );
         local $XML::SAX::ParserPackage = 'XML::LibXML::SAX';
-        my $parser = XML::SAX::ParserFactory->parser(
-            Handler => XML::API::SAXHandler->new(xmlapi => $self),
-        );
+        my $parser =
+          XML::SAX::ParserFactory->parser(
+            Handler => XML::API::SAXHandler->new( xmlapi => $self ), );
 
         # remove leading and trailing space, otherwise SAX barfs at us.
-        (my $t = $_) =~ s/(^\s+)|(\s+$)//go;
+        ( my $t = $_ ) =~ s/(^\s+)|(\s+$)//go;
+
         # escape '&' as well
         $t =~ s/\&(\w+\;)/__AMP__$1/go;
+
         # escape '&' in urls
         $t =~ s/\&(\w+=)/__AMP__amp;$1/go;
-        $parser->parse_string('<_xml_api_ignore>'.$t.'</_xml_api_ignore>');
+        $parser->parse_string(
+            '<_xml_api_ignore>' . $t . '</_xml_api_ignore>' );
     }
 
     # always make sure that we finish where we started
     $self->{current} = $current;
 }
 
-
 sub _parse_chunk {
-    my $self = shift;
+    my $self    = shift;
     my $current = $self->{current};
 
     foreach (@_) {
-        next unless(defined($_) and $_ ne '');
+        next unless ( defined($_) and $_ ne '' );
         local $XML::SAX::ParserPackage = 'XML::LibXML::SAX';
-        my $parser = XML::SAX::ParserFactory->parser(
-            Handler => XML::API::SAXHandler->new(xmlapi => $self),
-        );
+        my $parser =
+          XML::SAX::ParserFactory->parser(
+            Handler => XML::API::SAXHandler->new( xmlapi => $self ), );
 
         # remove leading and trailing space, otherwise SAX barfs at us.
-        (my $t = $_) =~ s/(^\s+)|(\s+$)//go;
+        ( my $t = $_ ) =~ s/(^\s+)|(\s+$)//go;
+
         # escape '&' as well
         $t =~ s/\&(\w+\;)/__AMP__$1/go;
+
         # escape '&' in urls
         $t =~ s/\&(\w+=)/__AMP__amp;$1/go;
+
         # escape '&' on their own.
         $t =~ s/(\W)\&(\W)/$1__AMP__amp;$2/go;
         $parser->parse_chunk($t);
@@ -687,20 +682,18 @@ sub _parse_chunk {
     $self->{current} = $current;
 }
 
-
 sub _attrs {
-    my $self  = shift;
+    my $self = shift;
 
     if (@_) {
         my $attrs = shift;
-        if (!$attrs or ref($attrs) ne 'HASH') {
+        if ( !$attrs or ref($attrs) ne 'HASH' ) {
             croak 'usage: _attrs($hashref)';
         }
         $self->{current}->{attrs} = $attrs;
     }
     return $self->{current}->{attrs};
 }
-
 
 sub _encoding {
     my $self = shift;
@@ -710,13 +703,12 @@ sub _encoding {
     return $self->{encoding};
 }
 
-
 sub _set_lang {
     my $self = shift;
     my $lang = shift || croak 'usage: set_lang($lang)';
     my $dir  = shift;
 
-    if ($self->{has_root_element} and !$self->_lang) {
+    if ( $self->{has_root_element} and !$self->_lang ) {
         $self->{elements}->[0]->{attrs}->{'xml:lang'} = $lang;
         if ($dir) {
             $self->{elements}->[0]->{attrs}->{'dir'} = $dir;
@@ -724,57 +716,53 @@ sub _set_lang {
     }
     else {
         $self->{langnext} = $lang;
-        $self->{dirnext} = $dir if($dir);
+        $self->{dirnext} = $dir if ($dir);
     }
     $self->{langs}->{$lang} = 1;
 
     return;
 }
 
-
 sub _lang {
     my $self = shift;
 
-    if ($self->{current}) {
+    if ( $self->{current} ) {
         return $self->{current}->{attrs}->{'xml:lang'}
-            if(exists($self->{current}->{attrs}->{'xml:lang'}));
+          if ( exists( $self->{current}->{attrs}->{'xml:lang'} ) );
 
         my $e = $self->{current};
-        while ($e = $e->{parent}) {
+        while ( $e = $e->{parent} ) {
             return $e->{attrs}->{'xml:lang'}
-                if(exists($e->{attrs}->{'xml:lang'}));
+              if ( exists( $e->{attrs}->{'xml:lang'} ) );
         }
     }
-    return $self->{langnext} if ($self->{langnext});
-    return $self->{parent}->_lang if ($self->{parent});
+    return $self->{langnext} if ( $self->{langnext} );
+    return $self->{parent}->_lang if ( $self->{parent} );
     return;
 }
 
-
 sub _langs {
     my $self = shift;
-    return keys %{$self->{langs}};
+    return keys %{ $self->{langs} };
 }
-
 
 sub _dir {
     my $self = shift;
 
-    if ($self->{current}) {
+    if ( $self->{current} ) {
         return $self->{current}->{attrs}->{'dir'}
-            if(exists($self->{current}->{attrs}->{'dir'}));
+          if ( exists( $self->{current}->{attrs}->{'dir'} ) );
 
         my $e = $self->{current};
-        while ($e = $e->{parent}) {
+        while ( $e = $e->{parent} ) {
             return $e->{attrs}->{'dir'}
-                if(exists($e->{attrs}->{'dir'}));
+              if ( exists( $e->{attrs}->{'dir'} ) );
         }
     }
-    return $self->{dirnext} if ($self->{dirnext});
-    return $self->{parent}->_dir if ($self->{parent});
+    return $self->{dirnext} if ( $self->{dirnext} );
+    return $self->{parent}->_dir if ( $self->{parent} );
     return;
 }
-
 
 sub _ns {
     my $self = shift;
@@ -784,7 +772,6 @@ sub _ns {
     return $self->{namespace};
 }
 
-
 sub _debug {
     my $self = shift;
     if (@_) {
@@ -792,7 +779,6 @@ sub _debug {
     }
     return $self->{debug};
 }
-
 
 sub _current {
     my $self = shift;
@@ -803,41 +789,39 @@ sub _set_id {
     my $self = shift;
     my $id   = shift;
 
-    if (!defined($id) or $id eq '') {
+    if ( !defined($id) or $id eq '' ) {
         carp '_set_id called without a valid id';
         return;
     }
-    if (defined($self->{ids}->{$id})) {
-        carp 'id '.$id.' already defined - overwriting';
+    if ( defined( $self->{ids}->{$id} ) ) {
+        carp 'id ' . $id . ' already defined - overwriting';
     }
     $self->{ids}->{$id} = $self->{current};
 }
-
 
 sub _goto {
     my $self = shift;
 
     if (@_) {
         my $id = shift;
-        if (!defined $id) {
+        if ( !defined $id ) {
             $self->{current} = undef;
             return;
         }
-        if ($id->isa( 'XML::API::Element' )) {
+        if ( $id->isa('XML::API::Element') ) {
             $self->{current} = $id;
         }
-        elsif (defined($self->{ids}->{$id})) {
-                $self->{current} = $self->{ids}->{$id};
+        elsif ( defined( $self->{ids}->{$id} ) ) {
+            $self->{current} = $self->{ids}->{$id};
         }
         else {
             carp "Nonexistent ID given to _goto: '$id'. ",
-                 '(Known IDs: ', join(',',keys(%{$self->{ids}})),')';
+              '(Known IDs: ', join( ',', keys( %{ $self->{ids} } ) ), ')';
             $self->{current} = undef;
         }
     }
     return $self->{current};
 }
-
 
 sub _as_string {
     my $self = shift;
@@ -845,21 +829,24 @@ sub _as_string {
 
     my $string = '';
 
-    if (ref($self) eq __PACKAGE__ or $self->{has_root_element}) {
+    if ( ref($self) eq __PACKAGE__ or $self->{has_root_element} ) {
         $string = qq{<?xml version="1.0" encoding="$self->{encoding}" ?>\n};
-        $string .= $self->_doctype . "\n" if($self->_doctype);
+        $string .= $self->_doctype . "\n" if ( $self->_doctype );
     }
 
-    $string .= join("\n", map {
-            $_->isa( __PACKAGE__ )
-                ? join("\n", map {$_->as_string} $_->_elements)
-                : $_->as_string('', '  ')
-        } @{$self->{elements}});
+    $string .= join(
+        "\n",
+        map {
+            $_->isa(__PACKAGE__)
+              ? join( "\n", map { $_->as_string } $_->_elements )
+              : $_->as_string( '', '  ' )
+        } @{ $self->{elements} }
+    );
 
     if ($file) {
-        open(FH, '>'.$file) || die "open '$file': $!";
-        if ($self->_encoding eq 'UTF-8') {
-            binmode(FH, ':utf8');
+        open( FH, '>' . $file ) || die "open '$file': $!";
+        if ( $self->_encoding eq 'UTF-8' ) {
+            binmode( FH, ':utf8' );
         }
         print FH $string;
         close(FH);
@@ -867,7 +854,6 @@ sub _as_string {
     }
     return $string;
 }
-
 
 sub _fast_string {
     my $self = shift;
@@ -875,17 +861,18 @@ sub _fast_string {
 
     my $string = '';
 
-    if (ref($self) eq __PACKAGE__ or $self->{has_root_element}) {
+    if ( ref($self) eq __PACKAGE__ or $self->{has_root_element} ) {
         $string = qq{<?xml version="1.0" encoding="$self->{encoding}" ?>};
-        $string .= $self->_doctype if($self->_doctype);
+        $string .= $self->_doctype if ( $self->_doctype );
     }
 
-    $string .= join("\n", map {$_->fast_string('', '  ')} @{$self->{elements}});
+    $string .=
+      join( "\n", map { $_->fast_string( '', '  ' ) } @{ $self->{elements} } );
 
     if ($file) {
-        open(FH, '>'.$file) || die "open '$file': $!";
-        if ($self->_encoding eq 'UTF-8') {
-            binmode(FH, ':utf8');
+        open( FH, '>' . $file ) || die "open '$file': $!";
+        if ( $self->_encoding eq 'UTF-8' ) {
+            binmode( FH, ':utf8' );
         }
         print FH $string;
         close(FH);
@@ -894,11 +881,10 @@ sub _fast_string {
     return $string;
 }
 
-
 sub _escapeXML {
     my $data = $_[0];
-    return '' unless(defined($data));
-    if ($data =~ /[\&\<\>\"(__AMP__)\']/o) {
+    return '' unless ( defined($data) );
+    if ( $data =~ /[\&\<\>\"(__AMP__)\']/o ) {
         $data =~ s/\&(?!\w+\;)/\&amp\;/go;
         $data =~ s/\</\&lt\;/go;
         $data =~ s/\>/\&gt\;/go;
@@ -909,13 +895,11 @@ sub _escapeXML {
     return $data;
 }
 
-
 #
 # We must specify the DESTROY function explicitly otherwise our AUTOLOAD
 # function gets called at object death.
 #
-DESTROY {};
-
+DESTROY { }
 
 1;
 __END__
