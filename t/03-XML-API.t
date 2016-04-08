@@ -54,6 +54,9 @@ $x->_close('e');
 is("$x", '<?xml version="1.0" encoding="UTF-8" ?>
 <e />', 'e close');
 
+is( $x->_fast_string, '<?xml version="1.0" encoding="UTF-8" ?><e />',
+    'e close fast' );
+
 $x = XML::API->new;
 $x->_open('e',-type => 'mytype','mycontent');
 is("$x", '<?xml version="1.0" encoding="UTF-8" ?>
@@ -210,7 +213,7 @@ is("$x", '<?xml version="1.0" encoding="UTF-8" ?>
   </p>
 </e>', 'e c n p escaped and raw content with parsed data');
 
-is($x->_fast_string, '<?xml version="1.0" encoding="UTF-8" ?><e><c>content</c><n attr="1"><n2>content<n3></n3><![CDATA[my < CDATA]]></n2></n><p>&lt;raw /&gt;<raw /><div class="divclass"><p>text</p></div><div class="divclass"><p>text</p></div><style type="text/css">/*<![CDATA[*/ margin: 0; /*]]>*/</style></p></e>'
+is($x->_fast_string, '<?xml version="1.0" encoding="UTF-8" ?><e><c>content</c><n attr="1"><n2>content<n3 /><![CDATA[my < CDATA]]></n2></n><p>&lt;raw /&gt;<raw /><div class="divclass"><p>text</p></div><div class="divclass"><p>text</p></div><style type="text/css">/*<![CDATA[*/ margin: 0; /*]]>*/</style></p></e>'
 , 'e c n p escaped and raw content with parsed data FAST');
 
 

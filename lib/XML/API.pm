@@ -116,6 +116,13 @@ sub fast_string {
     $self->{comment} && return '';
     $self->{cdata}   && return '<![CDATA['. $self->{cdata} . ']]>';
 
+    return
+        '<'
+      . ( $self->{ns} ? $self->{ns} . ':' : '' )
+      . $self->{element}
+      . $self->attrs_as_string . ' />'
+      unless @{ $self->{contents} };
+
     return  '<'. ($self->{ns} ? $self->{ns}.':' : '') 
            . $self->{element} . $self->attrs_as_string .'>'
            . join('', map {
