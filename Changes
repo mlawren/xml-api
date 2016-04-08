@@ -10,7 +10,7 @@
         - None.
 
     Bug Fixes:
-        - None.
+        - Correctly display empty elements as <e /> in fast_strings
 
     Dependencies:
         - None.
