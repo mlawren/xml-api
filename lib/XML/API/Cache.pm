@@ -75,8 +75,8 @@ must be an L<XML::API> object.
 =head2 langs
 
 Returns the values of the _langs() method from the original L<XML::API>
-object. This is used by L<XML::API> when _adding() the $cache to another
-L<XML::API> object.
+object. This is used by L<XML::API> when _adding() the $cache to
+another L<XML::API> object.
 
 =head2 content
 
@@ -93,12 +93,12 @@ Mark Lawrence E<lt>nomad@null.net<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2008,2015 Mark Lawrence <nomad@null.net>
+Copyright (C) 2008,2015,2016 Mark Lawrence <nomad@null.net>
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
 
 =cut
 

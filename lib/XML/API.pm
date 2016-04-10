@@ -951,15 +951,15 @@ Will produce this nice output:
 
 =head1 DESCRIPTION
 
-B<XML::API> is a class for creating XML documents using
-object method calls. This class is meant for generating XML
-programatically and not for reading or parsing it.
+B<XML::API> is a class for creating XML documents using object method
+calls. This class is meant for generating XML programatically and not
+for reading or parsing it.
 
 A document author calls the desired methods (representing elements) to
-create an XML tree in memory which can then be rendered or saved as desired.
-The advantage of having the in-memory tree is that you can be very flexible
-about when different parts of the document are created and the final output
-is always nicely rendered.
+create an XML tree in memory which can then be rendered or saved as
+desired. The advantage of having the in-memory tree is that you can be
+very flexible about when different parts of the document are created
+and the final output is always nicely rendered.
 
 =head1 TUTORIAL
 
@@ -975,27 +975,27 @@ out empty so we want to open up the html element:
 
   $x->html_open;
 
-Because we have called a *_open() function the 'current' or 'containing'
-element is now 'html'. All further elements will be added inside the
-'html' element. So lets add head and title elements and the title content
-('Document Title') to our object:
+Because we have called a *_open() function the 'current' or
+'containing' element is now 'html'. All further elements will be added
+inside the 'html' element. So lets add head and title elements and the
+title content ('Document Title') to our object:
 
   $x->head_open;
   $x->title('Document Title');
 
-The 'title()' method on its own (ie not 'title_open()') indicates that we
-are specifiying the entire title element. Further method calls will
-continue to place elements inside the 'head' element until we specifiy we
-want to move on by calling the _close method:
+The 'title()' method on its own (ie not 'title_open()') indicates that
+we are specifiying the entire title element. Further method calls will
+continue to place elements inside the 'head' element until we specifiy
+we want to move on by calling the _close method:
 
   $x->head_close();
 
 This sets the current element back to 'html'.
 
 So, basic elements seem relatively easy. How do we create elements with
-attributes? When either the element() or element_open() methods are called
-with a hashref argument the keys and values of the hashref become the
-attributes:
+attributes? When either the element() or element_open() methods are
+called with a hashref argument the keys and values of the hashref
+become the attributes:
 
   $x->body_open({id => 'bodyid'}, 'Content', 'more content');
 
@@ -1004,10 +1004,10 @@ because it takes less typing:
 
   $x->body_open(-id => 'bodyid', 'Content', 'more content');
 
-By the way, both the element() and element_open() methods take arbitrary
-numbers of content arguments as shown above. However if you don't want to
-specify the content of the element at the time you open it up you can
-use the _add() utility method later on:
+By the way, both the element() and element_open() methods take
+arbitrary numbers of content arguments as shown above. However if you
+don't want to specify the content of the element at the time you open
+it up you can use the _add() utility method later on:
 
   $x->div_open();
   $x->_add('Content added after the _open');
@@ -1018,8 +1018,9 @@ The final thing is to close out the elements and render the docment.
   $x->body_close();
   print $x->_as_string();
 
-Because we are not adding any more elements or content it is not strictly
-necessary to close out all elements, but consider it good practice.
+Because we are not adding any more elements or content it is not
+strictly necessary to close out all elements, but consider it good
+practice.
 
 You can add XML::API object to other objects, which lets you create for
 instance the head and body parts separately, and just bring them all
@@ -1034,7 +1035,8 @@ together just before printing:
   $x->html_close;
   print $x;
 
-Note that it is also possible to call the XML::API::<doctype> class directly.
+Note that it is also possible to call the XML::API::<doctype> class
+directly.
 
 =head1 CLASS SUBROUTINES
 
@@ -1047,9 +1049,10 @@ Create a new XML::API based object. The object is initialized as empty
   encoding => 'xxx'
   debug    => 1|0
 
-If a valid (ie known to XML::API) doctype is given then an object of class
-XML::API::DOCTYPE will be returned instead. This method will die if doctype is
-unknown. You can also call XML::API::DOCTYPE->new() directly.
+If a valid (ie known to XML::API) doctype is given then an object of
+class XML::API::DOCTYPE will be returned instead. This method will die
+if doctype is unknown. You can also call XML::API::DOCTYPE->new()
+directly.
 
 For the effects of the encoding and debug parameters see the
 documentation for '_encoding' and '_debug' below.
@@ -1079,9 +1082,9 @@ then $x->head_open(-attribute => $value) means the tree is now:
 
 =head2 $x->_open('element', -attribute => $value, {attr2 => 'val2'}, $content)
 
-The generic/underlying implementation of $x->element_open. Useful if your
-element names are not suitable as Perl method calls, or are otherwise funny
-(eg starting with '_').
+The generic/underlying implementation of $x->element_open. Useful if
+your element names are not suitable as Perl method calls, or are
+otherwise funny (eg starting with '_').
 
 =head2 $x->_add($content)
 
@@ -1098,15 +1101,15 @@ is an empty XML::API object.
 =head2 $x->_raw($content)
 
 Adds unescaped content to the 'current' element. You need to be careful
-of characters that mean something in XML such as '<','&' and '>'.
-This method will die if $content is an XML::API derivative or if
-$x does not have a current element.
+of characters that mean something in XML such as '<','&' and '>'. This
+method will die if $content is an XML::API derivative or if $x does not
+have a current element.
 
 =head2 $x->element_close( )
 
 This does not actually modify the tree but simply tells the object that
-future elements will be added to the parent of the current element.
-Ie given that $x currently represents:
+future elements will be added to the parent of the current element. Ie
+given that $x currently represents:
 
   <div>
     <p>  <---- 'current' element
@@ -1129,15 +1132,15 @@ element a warning will be issued and the call will fail.
 
 =head2 $x->_close('element')
 
-The generic/underlying implementation of $x->element_close. Useful if your
-element names are not suitable as Perl method calls, or are otherwise funny
-(eg starting with '_').
+The generic/underlying implementation of $x->element_close. Useful if
+your element names are not suitable as Perl method calls, or are
+otherwise funny (eg starting with '_').
 
 =head2 $x->element(-attribute => $value, {attr2 => 'val2'}, $content)
 
 Add a new element to the 'current' element but keep the 'current'
-element the same. Returns a reference (private data type)
-to the new element which can be used in the _goto function below.
+element the same. Returns a reference (private data type) to the new
+element which can be used in the _goto function below.
 
 This is effectively the same as the following:
 
@@ -1145,8 +1148,8 @@ This is effectively the same as the following:
     $x->_add($content);
     $x->element_close;
 
-If $content is not given (or never added with the _add method) for
-an element then it will be rendered as empty. Ie, $x->br() produces:
+If $content is not given (or never added with the _add method) for an
+element then it will be rendered as empty. Ie, $x->br() produces:
 
     <br />
 
@@ -1167,8 +1170,8 @@ shortcut for the case where you find yourself doing the following:
 
 =head2 $x->ns__element_open(...)
 
-Same as $x->element_open but prefixed with an XML namespace. Equivalent to
-the following.
+Same as $x->element_open but prefixed with an XML namespace. Equivalent
+to the following.
 
   $x->_ns('ns');
   $x->element_open(...);
@@ -1202,31 +1205,31 @@ A shortcut for $x->_raw("\n<![CDATA[", $content, " ]]>");
 
 =head2 $x->_css($content )
 
-Adds $content inside a pair of CDATA tags which are encapsulated
-inside CSS comments. Similar to:
+Adds $content inside a pair of CDATA tags which are encapsulated inside
+CSS comments. Similar to:
 
  $x->_raw('/*<![CDATA[*/ '. $content .' /*]]>*/');
 
 =head2 $x->_javascript($script )
 
-A shortcut for adding $script inside a pair of
-<script type="text/javascript"> elements and a _CDATA tag.
+A shortcut for adding $script inside a pair of <script
+type="text/javascript"> elements and a _CDATA tag.
 
 =head2 $x->_parse(@content)
 
 Adds content to the current element, but will parse it for xml elements
-and add them as method calls. Regardless of $content (missing end tags etc)
-the current element will remain the same. Relies on XML::SAX to do the
-parsing using the "parse_string" method. In this case XML::SAX requires
-that the content is a complete xml document.
+and add them as method calls. Regardless of $content (missing end tags
+etc) the current element will remain the same. Relies on XML::SAX to do
+the parsing using the "parse_string" method. In this case XML::SAX
+requires that the content is a complete xml document.
 
 =head2 $x->_parse_chunk(@content)
 
 Adds content to the current element, but will parse it for xml elements
-and add them as method calls. Regardless of $content (missing end tags etc)
-the current element will remain the same. Relies on XML::SAX to do the
-parsing, but using the "parse_chunk" method. This method is suitable for
-parsing xml fragments which are not necessarily complete.
+and add them as method calls. Regardless of $content (missing end tags
+etc) the current element will remain the same. Relies on XML::SAX to do
+the parsing, but using the "parse_chunk" method. This method is
+suitable for parsing xml fragments which are not necessarily complete.
 
 =head2 $x->_ast(@content)
 
@@ -1264,11 +1267,11 @@ and returns and hashref.
 =head2 $x->_encoding($value)
 
 Set the encoding definition produced in the xml declaration. Returns
-the current value if called without an argument.
-This is an alternative to defining the encoding in the call to 'new'.
+the current value if called without an argument. This is an alternative
+to defining the encoding in the call to 'new'.
 
-The XML encoding definition for objects is determined by the
-following, in this order:
+The XML encoding definition for objects is determined by the following,
+in this order:
 
   * the last call to _encoding
   * the encoding parameter given at object creation
@@ -1282,9 +1285,8 @@ top-level object's definition will be used.
 
 =head2 $x->_set_lang($lang, [$dir])
 
-Add an 'xml:lang' attribute, and an optional text direction $dir
-to the next element to be created. In terms of output created this means
-that:
+Add an 'xml:lang' attribute, and an optional text direction $dir to the
+next element to be created. In terms of output created this means that:
 
   $x->_set_lang('de', 'ltr');
   $x->p('Was sagst du?');
@@ -1293,14 +1295,14 @@ is equivalent to:
 
   $x->p(-xml:lang => 'de', -dir => 'ltr', 'Was sagst du?');
 
-with the added difference that _set_lang keeps track of each call
-and the list of languages set can be retrieved using the _langs
-method below.
+with the added difference that _set_lang keeps track of each call and
+the list of languages set can be retrieved using the _langs method
+below.
 
-The first time _set_lang is called the xml:lang attribute will be
-added to the root element instead of the next one, unless $x is
-a generic XML document. Without a XML::API::<class> object we
-don't know if we have the root element or not.
+The first time _set_lang is called the xml:lang attribute will be added
+to the root element instead of the next one, unless $x is a generic XML
+document. Without a XML::API::<class> object we don't know if we have
+the root element or not.
 
 =head2 $x->_lang
 
@@ -1311,32 +1313,33 @@ what the current element is. Returns 'undef' if the document has no
 
 =head2 $x->_langs
 
-Returns the list of the languages that have been specified by _set_lang.
+Returns the list of the languages that have been specified by
+_set_lang.
 
 =head2 $x->_dir
 
 Returns the text direction of the B<current element>. Note that this is
-not always the same as the last value given to _set_lang, but depends on
-what the current element is. Returns 'undef' if the document has no
+not always the same as the last value given to _set_lang, but depends
+on what the current element is. Returns 'undef' if the document has no
 direction specified.
 
 =head2 $x->_ns($namespace)
 
 Sets the XML namespace for future elements added with element() or
-element_open(). Use 'undef' for no namespace. If you just want a single-shot
-namespace you can also call element methods with a namespace postfixed by
-'__' (two underscores).
+element_open(). Use 'undef' for no namespace. If you just want a
+single-shot namespace you can also call element methods with a
+namespace postfixed by '__' (two underscores).
 
 =head2 $x->_debug(1|0)
 
-Turn on|off debugging from this point onwards. Debugging appears as
-xml comments in the rendered XML output.
+Turn on|off debugging from this point onwards. Debugging appears as xml
+comments in the rendered XML output.
 
 
 =head2 $x->_current( )
 
-Returns a reference (private data type) to the current element. Can
-be used in the _goto method to get back to the current element in the
+Returns a reference (private data type) to the current element. Can be
+used in the _goto method to get back to the current element in the
 future.
 
 
@@ -1363,21 +1366,21 @@ then later want to go back and modify it or fill in the details.
 
 Returns the xml-rendered version of the object. If $x has the root
 element for the doctype, or if $x is a pure XML::API object then the
-string is prefixed by the XML declaration (with the encoding as
-defined in the '_encoding' method documentation):
+string is prefixed by the XML declaration (with the encoding as defined
+in the '_encoding' method documentation):
 
   <?xml version="1.0" encoding="UTF-8" ?>
 
-The optional $file argument will cause the string to be written out
-to disk instead of being returned.
+The optional $file argument will cause the string to be written out to
+disk instead of being returned.
 
 =head2 $x->_fast_string($file)
 
 Returns the rendered version of the XML document without newlines or
 indentation.
 
-The optional $file argument will cause the string to be written out
-to disk instead of being returned.
+The optional $file argument will cause the string to be written out to
+disk instead of being returned.
 
 =head1 OVERLOADING
 
@@ -1396,11 +1399,13 @@ Returns the root element
 
 =head2 _root_attrs
 
-Returns a hashref containing default key/value attributes for the root element
+Returns a hashref containing default key/value attributes for the root
+element
 
 =head2 _content_type
 
-Returns a string suitable for including in a HTTP 'Content-Type' header.
+Returns a string suitable for including in a HTTP 'Content-Type'
+header.
 
 
 =head1 COMPATABILITY
@@ -1425,18 +1430,19 @@ L<NCGI>.
 
 Mark Lawrence E<lt>nomad@null.netE<gt>
 
-A small request: if you use this module I would appreciate hearing about it.
+A small request: if you use this module I would appreciate hearing
+about it.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2004-2010 Mark Lawrence <nomad@null.net>
+Copyright (C) 2004-2016 Mark Lawrence <nomad@null.net>
 
 =head1 LICENSE
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
 
 =cut
 
