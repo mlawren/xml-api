@@ -4,7 +4,7 @@ use warnings;
 use 5.006;
 use base qw(XML::API);
 
-our $VERSION = '0.28';
+our $VERSION = '0.29_1';
 
 my $xsd = {};
 
@@ -21,13 +21,12 @@ sub _root_element {
 }
 
 sub _root_attrs {
-    return {version => '2.0'};
+    return { version => '2.0' };
 }
 
 sub _content_type {
     return 'application/rss+xml';
 }
-
 
 1;
 
@@ -40,7 +39,7 @@ XML::API::RSS - RSS feed generation through an object API
 
 =head1 VERSION
 
-0.28 (2015-11-30)
+0.29_1 (2016-04-11)
 
 =head1 SYNOPSIS
 
@@ -90,12 +89,12 @@ Mark Lawrence E<lt>nomad@null.net<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004-2008,2015 Mark Lawrence <nomad@null.net>
+Copyright (C) 2004-2008,2015,2016 Mark Lawrence <nomad@null.net>
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
 
 =cut
 

@@ -11,8 +11,10 @@ $x->_ast(
     ]
 );
 
-is($x->_as_string,'<?xml version="1.0" encoding="UTF-8" ?>
+is(
+    $x->_as_string, '<?xml version="1.0" encoding="UTF-8" ?>
 <foo>
   <bar>--</bar>
-</foo>', 'double hyphen');
+</foo>', 'double hyphen'
+);
 

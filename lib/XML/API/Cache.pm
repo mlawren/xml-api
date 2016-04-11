@@ -4,7 +4,7 @@ use warnings;
 use Carp qw(croak);
 use overload '""' => \&content;
 
-our $VERSION = '0.28';
+our $VERSION = '0.29_1';
 
 sub new {
     my $proto = shift;
@@ -12,18 +12,18 @@ sub new {
     my $x     = shift || croak 'XML::API::Cache->new($x)';
     $x->isa('XML::API') || croak 'argument must be XML::API derived object';
 
-    my $self  = {
+    my $self = {
         content => $x->_fast_string,
-        langs   => [$x->_langs],
+        langs   => [ $x->_langs ],
     };
 
-    bless($self,$class);
+    bless( $self, $class );
     return $self;
 }
 
 sub langs {
     my $self = shift;
-    return @{$self->{langs}};
+    return @{ $self->{langs} };
 }
 
 sub content {
@@ -41,7 +41,7 @@ XML::API::Cache - Cached version of an XML::API object
 
 =head1 VERSION
 
-0.28 (2015-11-30)
+0.29_1 (2016-04-11)
 
 =head1 SYNOPSIS
 
@@ -75,8 +75,8 @@ must be an L<XML::API> object.
 =head2 langs
 
 Returns the values of the _langs() method from the original L<XML::API>
-object. This is used by L<XML::API> when _adding() the $cache to another
-L<XML::API> object.
+object. This is used by L<XML::API> when _adding() the $cache to
+another L<XML::API> object.
 
 =head2 content
 
@@ -93,12 +93,12 @@ Mark Lawrence E<lt>nomad@null.net<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2008,2015 Mark Lawrence <nomad@null.net>
+Copyright (C) 2008,2015,2016 Mark Lawrence <nomad@null.net>
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
 
 =cut
 
