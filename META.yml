@@ -30,4 +30,4 @@ resources:
   homepage: https://github.com/mlawren/xml-api
   license: http://www.gnu.org/licenses/gpl-3.0.txt
   repository: git://github.com/mlawren/xml-api.git
-version: 0.29_1
+version: '0.30'
