@@ -39,7 +39,7 @@ XML::API::RSS - RSS feed generation through an object API
 
 =head1 VERSION
 
-0.29_1 (yyyy-mm-dd)
+0.29_1 (2016-04-11)
 
 =head1 SYNOPSIS
 

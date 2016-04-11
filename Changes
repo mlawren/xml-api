@@ -1,4 +1,4 @@
-0.29_1 (yyyy-mm-dd)
+0.29_1 (2016-04-11)
 
     Bug Fixes:
         - Correctly display empty elements as <e /> in fast_strings
