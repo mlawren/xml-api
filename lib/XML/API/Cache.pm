@@ -4,7 +4,7 @@ use warnings;
 use Carp qw(croak);
 use overload '""' => \&content;
 
-our $VERSION = '0.29_2';
+our $VERSION = '0.30';
 
 sub new {
     my $proto = shift;
@@ -41,7 +41,7 @@ XML::API::Cache - Cached version of an XML::API object
 
 =head1 VERSION
 
-0.29_2 (yyyy-mm-dd)
+0.30 (yyyy-mm-dd)
 
 =head1 SYNOPSIS
 

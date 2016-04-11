@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use base qw(XML::API);
 
-our $VERSION = '0.29_2';
+our $VERSION = '0.30';
 
 use constant DOCTYPE =>
 qq{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">};
@@ -46,7 +46,7 @@ XML::API::XHTML - XHTML generation through an object API
 
 =head1 VERSION
 
-0.29_2 (yyyy-mm-dd)
+0.30 (yyyy-mm-dd)
 
 =head1 SYNOPSIS
 
