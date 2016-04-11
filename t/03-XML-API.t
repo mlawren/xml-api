@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 34;
+use Test::More;
 use Test::Exception;
 use Test::Memory::Cycle;
 use File::Slurp;
@@ -349,3 +349,4 @@ is(
 memory_cycle_ok( $noelements, 'memory cycle' );
 memory_cycle_ok( $ns,         'memory cycle' );
 
+done_testing();
