@@ -41,7 +41,7 @@ XML::API::Cache - Cached version of an XML::API object
 
 =head1 VERSION
 
-0.30 (yyyy-mm-dd)
+0.30 (2016-04-11)
 
 =head1 SYNOPSIS
 
