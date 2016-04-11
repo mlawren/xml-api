@@ -1,19 +1,12 @@
 0.29_1 (yyyy-mm-dd)
 
-    API / Behaviour Changes:
-        - None.
-
-    New Features:
-        - None.
-
-    Enhancements:
-        - None.
-
     Bug Fixes:
         - Correctly display empty elements as <e /> in fast_strings
 
-    Dependencies:
-        - None.
+    Authoring:
+        - Convert to Module::Build
+        - Auto-tidy files using githook-perltidy
+        - Update some copyright years
 
 0.28 (2015-11-30)
 
